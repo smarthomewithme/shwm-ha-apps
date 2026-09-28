@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2-beta.5
+
+- replaces the inline ES-module Browser Console bootstrap with a regular external bootstrap script served by the app
+- resolves Browser Console asset, diagnostics and websocket URLs relative to the current Ingress URL so the Home Assistant Ingress prefix is preserved automatically
+- forces JavaScript assets proxied from noVNC to use a valid `text/javascript` MIME type with `nosniff`
+- reports noVNC module-load, browser and diagnostics failures directly in the Browser Console instead of hanging indefinitely on `Connecting screen…`
+- logs Browser Console bootstrap, noVNC module and diagnostics requests without exposing credentials
+- adds a real headless Chromium frontend smoke test that must reach `Screen connected` before the image can be published
+- keeps the existing backend readiness, websocket `101`, persistent Chromium start/stop and unit/syntax checks as publication gates
+
 ## 0.4.2-beta.4
 
 - adds automatic Browser Console reconnect attempts
