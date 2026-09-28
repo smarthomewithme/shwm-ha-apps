@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2-beta.3
+
+- adds Openbox as a lightweight window manager for the interactive Chromium display
+- forces interactive Chromium to use X11 with a fixed visible window size and position
+- disables GPU rendering for the manual Xvfb/noVNC session to avoid black-screen rendering issues
+- clarifies that Browser Console `Connected` means the screen transport is connected, not that Facebook is authenticated
+- keeps headless verification runs separate from the interactive X11-only flags
+
 ## 0.4.2-beta.2
 
 - adds dashboard controls for the Facebook browser session
