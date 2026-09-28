@@ -1,0 +1,16 @@
+name: SHWM Content Engine
+version: "0.4.2-beta.1"
+slug: shwm_content_engine
+description: Private Smart Home With Me content promotion engine
+url: https://smarthomewithme.com
+arch:
+  - amd64
+startup: application
+boot: auto
+init: false
+ingress: true
+ingress_port: 8099
+ingress_stream: true
+panel_icon: mdi:bullhorn
+panel_title: SHWM Content Engine
+image: ghcr.io/smarthomewithme/shwm-content-engine
