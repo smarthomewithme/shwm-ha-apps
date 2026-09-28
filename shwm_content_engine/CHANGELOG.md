@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.2-beta.4
+
+- adds automatic Browser Console reconnect attempts
+- adds in-console diagnostics for x11vnc and websockify readiness
+- logs Home Assistant Ingress websocket upgrade details without exposing credentials
+- allows websocket compatibility fallback for the trusted Home Assistant Ingress peer when `X-Ingress-Path` is not forwarded on the upgrade request
+- adds explicit browser support readiness logs for Xvfb, Openbox, x11vnc and websockify
+- adds a real end-to-end websocket `101 Switching Protocols` smoke test before publishing the image
+- validates the full container, browser backend, websocket tunnel and real persistent Chromium start/stop before GHCR publication
+- publishing is serialized to avoid concurrent builds overwriting the same beta tag
+
 ## 0.4.2-beta.3
 
 - adds Openbox as a lightweight window manager for the interactive Chromium display
