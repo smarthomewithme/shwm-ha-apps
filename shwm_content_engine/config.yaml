@@ -1,5 +1,5 @@
 name: SHWM Content Engine
-version: "0.4.2-beta.58"
+version: "0.4.2-beta.59"
 slug: shwm_content_engine
 description: Private Smart Home With Me content promotion engine
 url: https://smarthomewithme.com
@@ -16,6 +16,7 @@ panel_title: SHWM Content Engine
 image: ghcr.io/smarthomewithme/shwm-content-engine
 options:
   ai_provider: auto
+  gemini_model: gemini-3.7-flash
 schema:
   ai_provider: list(auto|template|openai_compatible|gemini)
   ai_base_url: url?
