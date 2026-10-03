@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.2-beta.74
+
+- changes AI Promotion Studio `REGENERATE` into conservative `AI IMPROVE`: Gemini/OpenAI now use the current textarea text as the primary source and only improve grammar, clarity, flow and small wording issues instead of replacing a human rewrite from scratch
+- adds `AI IMPROVE` to Campaign Module localized group copies with the same preserve-the-author-text contract
+- keeps the author's meaning, facts, first-person voice, paragraph structure and URLs; AI editing uses source/article context only as a factual guard and must not invent new claims
+- makes AI Promotion Studio direct publishing strictly Facebook Page-only; personal profiles remain available only for Campaign Module Facebook-group publishing
+- renames Promotion Studio step 2 to `Facebook Page` and filters its selector to verified Page actors only
+- repairs the RSS → AI Promotion Studio bridge: `CREATE POST` or `Use selected RSS item` now loads the generated RSS content directly into Promotion Studio while `Include RSS module` is enabled
+- adds automatic News Radar refresh every 45 minutes plus an initial delayed refresh; manual `Refresh all` remains available
+- clarifies current RSS beta criteria in the UI: configured feeds/languages plus built-in smart-home relevance scoring and a selectable minimum Social score; keyword weights are not configurable yet
+
 ## 0.4.2-beta.73
 
 - filters Facebook utility/ad menu rows such as `Opcje reklam`, `Ad options`, Ads Manager, Business Suite and professional-dashboard entries out of DISCOVERED profile/Page choices in both Campaign Module and AI Promotion Studio
@@ -26,7 +37,7 @@
 - replaces the inline ES-module Browser Console bootstrap with a regular external bootstrap script served by the app
 - resolves Browser Console asset, diagnostics and websocket URLs relative to the current Ingress URL so the Home Assistant Ingress prefix is preserved automatically
 - forces JavaScript assets proxied from noVNC to use a valid `text/javascript` MIME type with `nosniff`
-- reports noVNC module-load, browser and diagnostics failures directly in the Browser Console instead of hanging indefinitely on `Connecting screen…`
+- reports Browser Console bootstrap, noVNC module-load, browser and diagnostics failures directly in the Browser Console instead of hanging indefinitely on `Connecting screen…`
 - logs Browser Console bootstrap, noVNC module and diagnostics requests without exposing credentials
 - adds a real headless Chromium frontend smoke test that must reach `Screen connected` before the image can be published
 - keeps the existing backend readiness, websocket `101`, persistent Chromium start/stop and unit/syntax checks as publication gates
