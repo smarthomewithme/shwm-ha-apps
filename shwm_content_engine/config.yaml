@@ -1,3 +1,10 @@
+# REPOSITORY LINKAGE — IMPORTANT
+# This PUBLIC repo is the Home Assistant distribution/metadata repo:
+#   smarthomewithme/shwm-ha-apps
+# Application source/builds live in the PRIVATE repo:
+#   smarthomewithme/shwm-content-engine
+# Keep this version synchronized with the GHCR image built by the private repo.
+# If this version is stale, Home Assistant will not show the new update.
 name: SHWM Content Engine
 version: "0.4.2-beta.71"
 slug: shwm_content_engine
