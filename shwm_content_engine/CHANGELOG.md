@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2-beta.72
+
+- keeps the strict Facebook `/me` protected-session probe and the fail-closed `c_user` account binding
+- fixes `PROTECTED_SESSION_CONTENT_NOT_CONFIRMED` false negatives seen when Facebook omits or delays `CurrentUserInitialData` in a fresh `/me` tab while acting as a Page
+- uses the same disposable probe tab for a second Facebook Home account-binding check; the visible interactive Facebook tab is never navigated by the login check
+- still rejects stale `c_user` when account-bound protected content cannot be proven
+- keeps the one-time retry only for a crashed read-only probe tab; publication actions are never automatically retried
+- makes Workspace `Current Facebook session` use the lightweight current-actor check instead of full profile discovery
+- prevents Workspace from remaining indefinitely on `CHECKING`; timeouts now become a visible `UNAVAILABLE` state
+- renames module profile refresh controls to `REFRESH PROFILES` in Campaign Module and AI Promotion Studio
+- preserves independent profile preferences for Campaign Module and AI Promotion Studio
+
 ## 0.4.2-beta.5
 
 - replaces the inline ES-module Browser Console bootstrap with a regular external bootstrap script served by the app
