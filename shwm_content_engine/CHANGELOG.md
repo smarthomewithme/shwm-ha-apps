@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2-beta.73
+
+- filters Facebook utility/ad menu rows such as `Opcje reklam`, `Ad options`, Ads Manager, Business Suite and professional-dashboard entries out of DISCOVERED profile/Page choices in both Campaign Module and AI Promotion Studio
+- keeps registered Facebook actors untouched while cleaning only transient discovery candidates
+- changes the Workspace card from a live browser navigation to the last positively verified Facebook actor from the persistent actor registry
+- removes the possibility of Workspace sitting indefinitely on `CHECKING` just because Facebook actor discovery/navigation is busy
+- labels the Workspace value honestly as `Last verified Facebook actor`; use `REFRESH PROFILES` in a module to resync after a manual Facebook profile/Page switch
+- preserves strict fail-closed login/session checks and does not change publication retry behavior
+
 ## 0.4.2-beta.72
 
 - keeps the strict Facebook `/me` protected-session probe and the fail-closed `c_user` account binding
