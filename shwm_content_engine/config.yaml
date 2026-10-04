@@ -6,7 +6,7 @@
 # Keep this version synchronized with the GHCR image built by the private repo.
 # If this version is stale, Home Assistant will not show the new update.
 name: SHWM Content Engine
-version: "0.4.2-beta.74"
+version: "0.4.2-beta.75"
 slug: shwm_content_engine
 description: Private Smart Home With Me content promotion engine
 url: https://smarthomewithme.com
