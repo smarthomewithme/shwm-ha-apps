@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.2-beta.77
+
+- hardens Facebook Page Graph API transport introduced in beta.76 without changing the dedicated-identity architecture
+- sends Page Access Tokens only in the `Authorization: Bearer` header instead of query strings or form bodies
+- publishes WordPress/article promotions through `/feed` with `message + link`, allowing Facebook to build the link preview from the article Open Graph metadata
+- publishes standalone image posts without a canonical URL through `/photos` with the public image URL and post text as the caption
+- keeps Chromium completely out of the Graph API Page path; browser publishing remains only the configured fallback
+- treats POST network failures and HTTP 5xx responses as ambiguous external state, blocking automatic retry to avoid duplicate Page posts
+- stores Graph transport metadata (`text`, `link`, or `photo`) and the returned remote object/post identifiers for diagnostics and history
+- adds regression tests proving link preview transport, photo transport, Bearer-token handling, absence of access tokens in POST bodies, and browser bypass
+
 ## 0.4.2-beta.76
 
 - gives every registered Facebook actor its own persistent Chromium identity/profile instead of making personal profile and Page actors share one browser profile
