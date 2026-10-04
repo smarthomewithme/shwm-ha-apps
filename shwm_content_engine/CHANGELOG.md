@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2-beta.78
+
+- repairs `DISCOVER ACTORS` after the beta.76 dedicated-identity migration
+- keeps the onboarding/default Facebook session responsible only for discovery, while returning every registered workspace actor even after that actor has moved to its own persistent Chromium identity
+- prevents registered Jarek/Page actors from disappearing from Campaign Module and AI Promotion Studio immediately after successful discovery
+- adds regression coverage proving onboarding discovery still returns actors whose `identity_id` is a dedicated `fbid-*` profile
+- adds visible discovery progress and success/error feedback in both modules, including the number of registered actors/Pages available
+- preserves the beta.76/77 rule that normal publishing never switches Facebook profiles automatically
+
 ## 0.4.2-beta.77
 
 - hardens Facebook Page Graph API transport introduced in beta.76 without changing the dedicated-identity architecture
