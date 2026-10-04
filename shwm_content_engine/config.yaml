@@ -3,10 +3,10 @@
 #   smarthomewithme/shwm-ha-apps
 # Application source/builds live in the PRIVATE repo:
 #   smarthomewithme/shwm-content-engine
-# Keep this version synchronized with the GHCR image built by the private repo.
-# If this version is stale, Home Assistant will not show the new update.
+# The scheduled GHCR sync workflow keeps this version synchronized only after
+# the matching container tag is visible in the registry.
 name: SHWM Content Engine
-version: "0.4.2-beta.75"
+version: "0.4.2-beta.76"
 slug: shwm_content_engine
 description: Private Smart Home With Me content promotion engine
 url: https://smarthomewithme.com
@@ -24,6 +24,10 @@ image: ghcr.io/smarthomewithme/shwm-content-engine
 options:
   ai_provider: auto
   gemini_model: gemini-3.7-flash
+  facebook_page_publish_mode: auto
+  facebook_graph_version: v26.0
+  facebook_page_id: ""
+  facebook_page_access_token: ""
 schema:
   ai_provider: list(auto|template|openai_compatible|gemini)
   ai_base_url: url?
@@ -31,3 +35,7 @@ schema:
   ai_model: str?
   gemini_api_key: password?
   gemini_model: str?
+  facebook_page_publish_mode: list(auto|graph_api|browser)
+  facebook_graph_version: str?
+  facebook_page_id: str?
+  facebook_page_access_token: password?
