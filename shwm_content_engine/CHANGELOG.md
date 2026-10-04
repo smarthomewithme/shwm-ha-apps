@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.2-beta.85
+
+- fixes Campaign Module CHECK SESSION and OPEN LOGIN using master API paths missing from the HTTP router
+- preserves the saved persistent Facebook account and all publishing verification gates
+- covers the real HTTP endpoints and CHECK SESSION in the Chromium Promotor smoke
+
 ## 0.4.2-beta.84
 
 - fixes Promotor startup calling a missing actor hydration function before it could load profiles or WordPress articles
