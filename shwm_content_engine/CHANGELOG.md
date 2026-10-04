@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.2-beta.87
+
+- adds one exclusive master session broker with WORKER / DIAGNOSTICS / INTERACTIVE ownership
+- reuses headless Chromium and its automation page across group operations, closing after five minutes idle
+- preserves the original persistent profile/cookies and blocks overlapping Browser Console/worker access
+- adds explicit FINISH LOGIN / CLOSE CONSOLE, read-only cached session status and automatic single-actor UX
+- aligns dashboard controls and network diagnostics with broker ownership and waits for login preparation before loading Console
+- performs fresh protected session/expected actor verification and exact group destination checks before submit
+- retains campaign/copy/history during manual intervention and prevents success/retry after a context crash
+- measures cold/warm startup, operation/gap latency and session probe durations
+- adds 44 broker/API/publisher/queue regressions and real Chromium reuse/lock/idle/dashboard smoke
+
+## 0.4.2-beta.86
+
+- adds Meta authorization, managed Page discovery, selection and read-only connection tests without Chromium
+- requires explicit Meta App configuration and a stable HTTPS callback; setup APIs stay behind trusted HA Ingress
+- binds expiring one-time OAuth state to the browser setup attempt and keeps credentials out of UI/API/logs/SQLite
+- saves the selected Page token through Home Assistant Supervisor options, preserving unrelated options
+- keeps Graph-only Page publishing, exact Page fingerprint binding and no retry after ambiguous submit
+- adds 29 regression tests and Meta setup checks in the Chromium Promotor smoke
+
 ## 0.4.2-beta.85
 
 - fixes Campaign Module CHECK SESSION and OPEN LOGIN using master API paths missing from the HTTP router

@@ -6,7 +6,7 @@
 # The scheduled GHCR sync workflow keeps this version synchronized only after
 # the matching container tag is visible in the registry.
 name: SHWM Content Engine
-version: "0.4.2-beta.85"
+version: "0.4.2-beta.87"
 slug: shwm_content_engine
 description: Private Smart Home With Me content promotion engine
 url: https://smarthomewithme.com
@@ -28,6 +28,9 @@ options:
   facebook_graph_version: v26.0
   facebook_page_id: ""
   facebook_page_access_token: ""
+  facebook_meta_app_id: ""
+  facebook_meta_app_secret: ""
+  facebook_meta_config_id: ""
 schema:
   ai_provider: list(auto|template|openai_compatible|gemini)
   ai_base_url: url?
@@ -39,3 +42,7 @@ schema:
   facebook_graph_version: str?
   facebook_page_id: str?
   facebook_page_access_token: password?
+  facebook_meta_app_id: str?
+  facebook_meta_app_secret: password?
+  facebook_meta_redirect_uri: url?
+  facebook_meta_config_id: str?

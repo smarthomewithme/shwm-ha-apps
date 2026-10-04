@@ -5,61 +5,55 @@ Private application for **Smart Home With Me**.
 Website: https://smarthomewithme.com  
 Contact: smarthomewithme@gmail.com
 
-## Beta 0.4.2
+## Beta 0.4.2-beta.87
 
-The application runs inside Home Assistant and stores its persistent runtime data in `/data`, including browser identities and the SQLite database. This data survives normal app restarts and Home Assistant backups.
+The application stores the SQLite database and the original persistent Chromium profile in `/data`. Normal updates and restarts preserve the account cookies, actors, campaigns and history.
 
-## Facebook architecture
+## Facebook account and groups
 
-Beta.76 separates direct Facebook Page publishing from Facebook-group publishing.
+Campaign Module uses the saved **personal account** through one master persistent Chromium session. Personal actors are loaded from ActorRegistry and the normal single account is selected automatically. There is no per-actor login, dedicated profile creation or automatic Facebook identity switching.
 
-### Facebook Pages
+CHECK LOGIN / CHECK SESSION is read-only and registers the verified account. It does not open Browser Console or initiate login. If Facebook requires manual intervention, use OPEN LOGIN, complete the normal login/checkpoint/2FA, then **FINISH LOGIN / CLOSE CONSOLE**, followed by CHECK SESSION.
 
-AI Promotion Studio can publish directly to a Facebook Page through the official Meta Graph API.
+Closing the console tab alone does not finish manual ownership. Automated operations remain paused until the explicit finish action closes headed Chromium. Browser Console remains available only through trusted Home Assistant Ingress, and port 6080 is not exposed on the host.
 
-Home Assistant app options:
+WORKER, DIAGNOSTICS and INTERACTIVE ownership is exclusive. Workers reuse one headless context and automation page. Chromium closes after five idle minutes, retaining its saved profile. The dated session status cache speeds up UI rendering; it never authorizes publication. Every group target has live preflight and fresh expected account/actor and destination checks immediately before submit.
 
-- `facebook_page_publish_mode`
-  - `auto` — prefer Graph API when Page credentials are configured, otherwise use the dedicated browser session
-  - `graph_api` — require Graph API and fail closed when it is not configured
-  - `browser` — always use browser publishing
-- `facebook_graph_version` — Graph API version used by the runtime
-- `facebook_page_id` — numeric Facebook Page ID
-- `facebook_page_access_token` — Page Access Token; stored by Home Assistant as a password option and never returned by the app status API
+Group checks remain read-only. Unknown membership/readiness stays unknown. Login/security intervention preserves campaign, target, copy and history. An ambiguous external submit is never retried automatically.
 
-The Graph API path verifies the configured Page before publication. A successful Meta post ID is treated as positive publication evidence. Network ambiguity after a submit is never automatically retried because doing so could create a duplicate post.
+See [Master session guide](MASTER_SESSION.md) for lifecycle, diagnostics and the manual test plan.
 
-### Facebook groups
+## Facebook Pages: Meta Graph API only
 
-Facebook-group publishing remains browser-based because Meta no longer exposes a public Groups publishing API suitable for this workflow.
+AI Promotion Studio uses **CONNECT META** to authorize, discover managed Pages and select a Page resource. Page operations never open Chromium or switch the browser actor.
 
-Each registered Facebook actor now owns a separate persistent Chromium identity/profile. A personal profile and a Page therefore do not share one browser profile and the worker does not switch Jarek ↔ Page during publication.
+Meta authorization requires a configured Meta App, appropriate Page permissions and a stable HTTPS callback ending in `/api/v1/meta/callback`. A temporary Home Assistant Ingress URL cannot serve as that callback. Configure a reverse proxy exposing only the callback; keep all other APIs and Browser Console private. The UI clearly reports missing setup.
 
-Use the actor controls in the app to:
+App options:
 
-1. open the dedicated session,
-2. log in to Facebook when needed,
-3. verify the session once,
-4. reuse that persistent actor identity for group checks and publication.
+- `facebook_meta_app_id` — Meta App ID
+- `facebook_meta_app_secret` — backend-only password option
+- `facebook_meta_redirect_uri` — stable HTTPS callback, also registered with Meta
+- `facebook_meta_config_id` — optional Login for Business configuration issuing a user token
+- `facebook_graph_version` — Graph version
+- `facebook_page_id` and `facebook_page_access_token` — selected credentials stored through Home Assistant Supervisor options; Advanced manual setup remains available before an OAuth connection
+- `facebook_page_publish_mode` — use `auto` or `graph_api`; the retained legacy `browser` option cannot enable Page browser publishing
 
-Campaign targets remain locked to an explicit actor. Before submit, the worker verifies the exact actor again and fails closed on mismatch or an unverified session.
+After CONNECT META, return to Promotor, select USE THIS PAGE and TEST PAGE CONNECTION. Tokens and App Secret are never returned in status/UI, logged or saved in SQLite. Home Assistant options and backups are an interim secret store, not encryption against HA administrators. Protect administrative access and backups.
 
-## What to validate after an update
+A revoked/expired OAuth Page connection requires RECONNECT and cannot fall back to Chromium or manual credentials. Publishing verifies the selected Page identity and permissions; ambiguous POSTs are never automatically retried.
 
-- app startup and `/api/v1/health`
-- Home Assistant Ingress UI
-- WordPress content sync
-- RSS News Radar and RSS → AI Promotion Studio routing
-- persisted Campaign Module and Promotion Studio Facebook profile/Page preferences
-- dedicated Facebook actor sessions
-- Facebook group readiness checks
-- AI Promotion Studio Page transport status (`graph_api` or browser fallback)
-- publication history and captured Facebook post links
+See [Meta connection guide](META_CONNECTION.md) for App configuration, callback security and storage trade-offs.
 
-## Safety behavior
+## Validation after update
 
-- no automatic Facebook profile switching during publication
-- no automatic retry after an ambiguous external submit
-- actor and group readiness are checked before group publication
-- Page Graph API credentials are not exposed in status responses or logs
-- browser automation is retained only where the official API does not cover the workflow
+1. Update and restart SHWM Content Engine.
+2. CHECK LOGIN; confirm the expected personal actor.
+3. Open SHWM Promotor and CHECK SESSION in Campaign Module; it must reach the backend without Route not found.
+4. If manual login is needed, OPEN LOGIN → complete login → FINISH LOGIN / CLOSE CONSOLE → CHECK SESSION.
+5. Check the same group twice; confirm read-only checks and warm context reuse.
+6. Configure CONNECT META, authorize, select the intended Page and TEST PAGE CONNECTION.
+7. Confirm WordPress articles and saved module preferences remain visible.
+8. Only when deliberately ready, approve a single group target and a single Page post yourself; inspect destination, actor and captured result before testing a larger campaign.
+
+CI uses synthetic content and never makes a live Facebook post. Actual Meta permission approval, callback routing, Supervisor option persistence and live Facebook latency still require validation in the installation.
