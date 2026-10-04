@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.2-beta.76
+
+- gives every registered Facebook actor its own persistent Chromium identity/profile instead of making personal profile and Page actors share one browser profile
+- removes runtime Jarek ↔ Page switching from the normal publication path; Campaign Module opens the dedicated browser identity locked to each target actor
+- keeps Facebook-group publishing on guarded browser automation because Meta no longer provides a public Groups publishing API
+- adds official Meta Graph API publishing for Facebook Pages in AI Promotion Studio, with `auto`, `graph_api` and `browser` transport modes
+- verifies the configured Graph API Page before submit and uses the returned Meta post ID as positive publication evidence; permalink readback is attempted separately
+- prevents ambiguous Graph API POST/network failures from being automatically retried, preserving duplicate-post protection
+- adds Home Assistant options for Graph API version, Page ID and Page Access Token; the token is passed only through the process environment and is never returned by the status API
+- keeps browser publishing as a fallback in `auto` mode when Graph API credentials are not configured
+- adds per-actor `OPEN SESSION` and `VERIFY SESSION` controls so browser identities can be prepared once and then reused without profile switching during a campaign
+- carries `actor_id` through durable queue leases so the worker always knows which dedicated Facebook identity owns the target
+- aligns Page publisher and queue regression coverage with the dedicated-identity contract and adds a unit test proving Graph API publishing bypasses Chromium entirely
+- splits CircleCI into observable gates for transforms, syntax, actor/browser tests, publication tests, worker/queue tests, remaining tests, and final release smoke/publish
+
 ## 0.4.2-beta.75
 
 - keeps RSS completely out of Campaign Module; Campaign Module accepts only WordPress blog articles, enforced in both UI and backend
