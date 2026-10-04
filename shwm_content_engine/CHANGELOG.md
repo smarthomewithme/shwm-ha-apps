@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2-beta.83
+
+- keeps one persistent master Facebook account session for personal-profile group campaigns and preserves the existing onboarding Chromium profile
+- fixes CHECK LOGIN verifying the session without registering the personal actor; the verified probe now populates ActorRegistry and the Campaign profile automatically
+- separates explicit OPEN LOGIN from read-only CHECK LOGIN, uses committed login navigation, and prevents overlapping wizard actions
+- migrates legacy personal actor bindings transactionally and idempotently while preserving actor IDs, legacy identities, metadata and group history
+- blocks group publishing through a Page or a dedicated per-actor session; the master personal actor remains verified before submit
+- Page publishing and permalink recovery use Meta Graph API without Chromium or actor switching; configure Page ID and Page access token in auto/graph_api mode
+- keeps Bearer-only credentials, article /feed transport, standalone image /photos transport and no automatic retry after ambiguous POST
+- preserves campaigns and target errors when login/security intervention is required, exposing NEEDS_ATTENTION rather than losing the work
+- adds 30 regression tests; the effective beta runtime passes 364 tests before release
+
 ## 0.4.2-beta.82
 
 - replaces the beta.76 per-actor Chromium-login model with a Facebook Account Manager: the personal Facebook profile uses one persistent master account session
