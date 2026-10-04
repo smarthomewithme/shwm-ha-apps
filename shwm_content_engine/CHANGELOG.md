@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.2-beta.79
+
+- replaces the loose Facebook browser controls with a guided Facebook Login Wizard
+- makes `OPEN FACEBOOK LOGIN` open Browser Console in a separate tab instead of navigating away from SHWM Content Engine
+- allows an optional Facebook email/phone login hint to be stored only in the local dashboard browser and prefilled into Facebook; SHWM never accepts or stores the Facebook password or 2FA secret
+- adds `TEST CONNECTION` diagnostics that distinguish add-on-to-Facebook reachability from Chromium `navigator.onLine` state and report HTTP/latency/error details
+- navigates the interactive session directly to the Facebook login page for onboarding instead of relying on the full Facebook home feed
+- removes Chromium `--disable-background-networking`, which is inappropriate for a normal interactive login session
+- restores X11 DAMAGE support in x11vnc instead of forcing `-noxdamage`, reducing unnecessary full-screen polling
+- reduces the interactive framebuffer/window from 1365×768 to 1280×720 and tunes noVNC for responsiveness with fixed local scaling, compression level 2 and quality level 5
+- keeps the existing persistent Chromium identity so a successful login can be reused across restarts until Facebook invalidates the session
+- preserves beta.78 actor discovery and the beta.76 dedicated-identity architecture
+
 ## 0.4.2-beta.78
 
 - repairs `DISCOVER ACTORS` after the beta.76 dedicated-identity migration
