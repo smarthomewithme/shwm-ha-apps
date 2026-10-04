@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2-beta.84
+
+- fixes Promotor startup calling a missing actor hydration function before it could load profiles or WordPress articles
+- hydrates saved personal profiles and Page resources independently from WordPress, with visible errors and no normal browser discovery
+- filters WordPress ARTICLE records before the API limit and sync decision, so RSS/manual content cannot hide articles or prevent initial sync
+- removes obsolete browser-actor gates from Page generation/publishing and refreshes configured Meta Graph API Pages through read-only identity/type verification
+- keeps Page credentials in Bearer headers and does not create Chromium profiles; absent Graph configuration is explained in the Page panel
+- adds 18 regression tests and a real Chromium Promotor runtime smoke covering selectors, content and Page generation
+
 ## 0.4.2-beta.83
 
 - keeps one persistent master Facebook account session for personal-profile group campaigns and preserves the existing onboarding Chromium profile
