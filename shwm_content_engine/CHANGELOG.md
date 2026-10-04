@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.2-beta.80
+
+- fixes Chromium `DNS_PROBE_FINISHED_BAD_CONFIG` seen in Facebook onboarding and dedicated actor sessions by giving Chromium its own managed Secure DNS (DoH) policy instead of rewriting Home Assistant/container DNS
+- uses a literal-IP DoH bootstrap endpoint (`https://1.1.1.1/dns-query`) so Chromium can resolve Facebook even when the container's current resolver configuration is broken
+- keeps Home Assistant, Docker and Node resolver configuration untouched; DNS recovery is scoped only to Chromium
+- upgrades `TEST CONNECTION` from `navigator.onLine` to a real in-Chromium Facebook request, because an interface can report online while DNS is unusable
+- treats the backend/Node Facebook probe as secondary evidence; a successful Chromium Facebook probe now produces an ONLINE result even if the backend probe times out
+- exposes browser reachability and backend DNS/timeout warnings separately so a Node-side timeout can no longer masquerade as a failed Facebook browser session
+- adds regression coverage for a working Chromium Facebook path combined with a failing backend DNS probe
+- preserves the beta.79 login wizard, beta.78 actor discovery repair and beta.76 dedicated actor identity architecture
+
 ## 0.4.2-beta.79
 
 - replaces the loose Facebook browser controls with a guided Facebook Login Wizard
