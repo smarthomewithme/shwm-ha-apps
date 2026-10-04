@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2-beta.75
+
+- keeps RSS completely out of Campaign Module; Campaign Module accepts only WordPress blog articles, enforced in both UI and backend
+- filters AI Promotion Studio `Blog article` to WordPress ARTICLE content only
+- routes RSS explicitly into `New topic / RSS` via `SEND TO AI STUDIO`; RSS no longer appears as a blog article source
+- adds `CANCEL POST` for the current unpublished Promotion Studio source/drafts with a two-step confirmation
+- refreshes RSS/Promotion Studio UI immediately after routing an RSS item instead of requiring a manual page reload
+- hydrates persisted Facebook actors and independent module profile preferences from registry on page reload so discovered/registered profiles do not appear to vanish
+- exposes queue error code/message and attempt counters in Campaign Module diagnostics instead of silently hiding failed/blocked campaigns
+- preserves the fail-closed actor interlock: if the scheduled actor does not match the active Facebook actor, publishing is blocked before submit and the mismatch is surfaced to the UI
+- reduces the first campaign publication slot from about 10 minutes to about 1 minute to make guarded test campaigns easier to verify
+
 ## 0.4.2-beta.74
 
 - changes AI Promotion Studio `REGENERATE` into conservative `AI IMPROVE`: Gemini/OpenAI now use the current textarea text as the primary source and only improve grammar, clarity, flow and small wording issues instead of replacing a human rewrite from scratch
@@ -37,7 +49,7 @@
 - replaces the inline ES-module Browser Console bootstrap with a regular external bootstrap script served by the app
 - resolves Browser Console asset, diagnostics and websocket URLs relative to the current Ingress URL so the Home Assistant Ingress prefix is preserved automatically
 - forces JavaScript assets proxied from noVNC to use a valid `text/javascript` MIME type with `nosniff`
-- reports Browser Console bootstrap, noVNC module-load, browser and diagnostics failures directly in the Browser Console instead of hanging indefinitely on `Connecting screen…`
+- reports Browser Console module-load, browser and diagnostics failures directly in the Browser Console instead of hanging indefinitely on `Connecting screen…`
 - logs Browser Console bootstrap, noVNC module and diagnostics requests without exposing credentials
 - adds a real headless Chromium frontend smoke test that must reach `Screen connected` before the image can be published
 - keeps the existing backend readiness, websocket `101`, persistent Chromium start/stop and unit/syntax checks as publication gates
