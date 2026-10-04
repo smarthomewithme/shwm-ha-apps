@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.2-beta.82
+
+- replaces the beta.76 per-actor Chromium-login model with a Facebook Account Manager: the personal Facebook profile uses one persistent master account session
+- migrates existing `PERSONAL_PROFILE` actors such as Jarek Drewnicki back to the master Facebook identity while preserving the old dedicated identity as rollback metadata
+- keeps actor IDs and actor×group capability history stable during migration, so existing Campaign Module targets do not need to be recreated
+- removes `DISCOVER ACTORS` from the normal Campaign Module and AI Promotion Studio workflow; saved actors are loaded from the persistent registry instead
+- replaces Campaign Module `OPEN SESSION` / `VERIFY SESSION` with `CHECK SESSION`; the normal path performs a headless verification and does not open Browser Console
+- exposes `OPEN LOGIN` only when the master Facebook session actually needs manual login or correction
+- opens a lightweight preparation tab first and connects it to Browser Console only after the master Chromium session has started, avoiding a long-loading console tab during browser startup
+- removes browser-session controls from AI Promotion Studio Page selection; Facebook Pages remain resources and prefer the official Meta Graph API path
+- keeps Facebook-group publishing on the selected personal actor but now executes it through the actor's master Facebook account identity, eliminating duplicate Facebook logins per actor
+- adds migration, account-session, UI and release regression coverage; all actor/browser, publication, worker/queue and REST gates pass before image publication
+
+## 0.4.2-beta.81
+
+- fixes Campaign Module and AI Promotion Studio `OPEN SESSION` navigating away from SHWM Promotor
+- opens Browser Console in a separate tab so the current Promotor state, selected content and module configuration stay visible
+- re-hydrates persisted actor/profile state when the user returns to the Promotor tab without running actor discovery or navigating Facebook
+- adds regression coverage preventing same-tab Browser Console navigation
+
 ## 0.4.2-beta.80
 
 - fixes Chromium `DNS_PROBE_FINISHED_BAD_CONFIG` seen in Facebook onboarding and dedicated actor sessions by giving Chromium its own managed Secure DNS (DoH) policy instead of rewriting Home Assistant/container DNS
