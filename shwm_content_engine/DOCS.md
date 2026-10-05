@@ -93,3 +93,11 @@ Closing the noVNC browser tab does not stop the server-side INTERACTIVE owner. A
 The group publisher resolves one genuine trigger, ignoring broad tabindex/role wrappers around a nested button and cover photo. It polls bounded actionability, hit-tests points inside that control and uses ordinary Playwright clicks. COMPOSER_CLICK_BLOCKED and SUBMIT_CONTROL_BLOCKED pause for manual review. It never forces a click through another element. A submit timeout remains SUBMISSION_AMBIGUOUS and cannot trigger another automatic submit.
 
 Validation includes synthetic Chromium layouts with a cover-photo ancestor, partial/transient/permanent overlays, delayed controls, duplicate controls and a wrapped native submit. Live Facebook layouts still require a reviewed manual target test after installation; do not re-submit an existing ambiguous target until its remote outcome is resolved.
+
+### Live composer readiness in beta.90
+
+Facebook may replace a composer trigger while the group hydrates. Before sending any normal click, the publisher now re-resolves the current unique semantic trigger on each readiness retry, disposes discarded handles and rechecks receiving-events geometry after its non-clicking Playwright trial. Polling uses the existing bounded deadline. Ambiguous controls, a changed group destination and permanent obstruction still block. A sent opener/submit click is never automatically repeated by this recovery path.
+
+OPEN_COMPOSER errors now distinguish CONTROL_DETACHED, CONTROL_COVERED, CONTROL_OFFSCREEN, CONTROL_DISABLED, CONTROL_HIDDEN, CONTROL_POINTER_EVENTS, CONTROL_UNRESOLVED, PLAYWRIGHT_SCROLL_TIMEOUT, PLAYWRIGHT_TRIAL_TIMEOUT and READINESS_ERROR. The message includes only allowlisted element types and attempt/candidate counts. It excludes page HTML, labels, names, IDs, cookie values and tokens. A covered-button diagnostic can identify blockers=IMG or blockers=DIV without exposing the image URL or text.
+
+If a group remains blocked after the update, retain the complete readiness line and inspect that group in Browser Console. Finish manual work using FINISH LOGIN / CLOSE CONSOLE, then CHECK SESSION, CHECK ACTOR and CHECK GROUP before manually resuming. A real overlay is never bypassed; live Facebook layout validation remains necessary.

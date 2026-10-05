@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2-beta.90
+
+- re-resolves the current unique semantic composer trigger during bounded hydration/actionability polling; replaced DOM handles are disposed instead of retried until timeout
+- rechecks hit-testing after Playwright trial and sends only one normal opener click; never forces clicks, retries a sent submit or substitutes another group/actor
+- keeps all fresh account/actor/group/composed-dialog submit gates and manual pause/ambiguous-outcome recovery unchanged
+- adds safe OPEN_COMPOSER readiness reasons and allowlisted control/blocker element types; no HTML, labels, profile names, cookies, tokens or raw actionability exceptions in diagnostics
+- adds 14 regressions covering single/repeated replacement, ambiguity/destination changes, diagnostic privacy and trial failures
+- extends real Chromium smoke with deterministic trigger replacement and permanent-cover diagnostics; no live Facebook requests
+
 ## 0.4.2-beta.89
 
 - resolves a unique semantic composer trigger/submit button instead of a broad focusable ancestor containing the same text and cover photo
