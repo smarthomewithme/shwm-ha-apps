@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2-beta.89
+
+- resolves a unique semantic composer trigger/submit button instead of a broad focusable ancestor containing the same text and cover photo
+- waits within a bounded deadline for hydration/actionability and checks an unobstructed point on the real control; normal Playwright clicks only, no force or JavaScript submit
+- retains fresh account/actor/group/composer guards and durable attempt checks; an uncertain submit is sent once and requires manual outcome recovery
+- identifies OPEN_COMPOSER/PRE_SUBMIT/SUBMIT errors without exposing raw click logs, HTML or CDN URLs
+- adds FINISH LOGIN / CLOSE CONSOLE directly to WAITING_FOR_INTERACTIVE_SESSION target errors and refreshes visible session ownership after Console opens/returns
+- never releases a worker-owned lock or automatically resumes publication when Console closes
+- adds 42 regression tests and real Chromium controls/overlay/recovery smoke, keeping all prior coverage
+
 ## 0.4.2-beta.88
 
 - enables registered personal profiles, Pages and acting profiles for Facebook group campaigns through the original master account profile

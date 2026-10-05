@@ -85,3 +85,11 @@ C. Switching: execute a reviewed personal target then a reviewed Page target. Ve
 D. Own Page: use AI Promotion Studio with CONNECT META / selected Page. Confirm Graph API operation without Chromium startup/profile switching. Missing Graph configuration must return GRAPH_API_REQUIRED.
 
 Live Facebook UI/localization, Page eligibility and old-hardware hydration remain runtime validation items. Synthetic Chromium smoke cannot prove live Facebook selector compatibility. CAPTCHA, checkpoint and 2FA always require manual action.
+
+### Composer and Console recovery in beta.89
+
+Closing the noVNC browser tab does not stop the server-side INTERACTIVE owner. After manual work, use FINISH LOGIN / CLOSE CONSOLE in Campaign Module (also shown on WAITING_FOR_INTERACTIVE_SESSION target errors). This stops only the interactive master session; a worker-owned operation remains protected. CHECK SESSION, CHECK ACTOR and CHECK GROUP before manually resuming the reviewed target. Approved copy and campaign state are retained.
+
+The group publisher resolves one genuine trigger, ignoring broad tabindex/role wrappers around a nested button and cover photo. It polls bounded actionability, hit-tests points inside that control and uses ordinary Playwright clicks. COMPOSER_CLICK_BLOCKED and SUBMIT_CONTROL_BLOCKED pause for manual review. It never forces a click through another element. A submit timeout remains SUBMISSION_AMBIGUOUS and cannot trigger another automatic submit.
+
+Validation includes synthetic Chromium layouts with a cover-photo ancestor, partial/transient/permanent overlays, delayed controls, duplicate controls and a wrapped native submit. Live Facebook layouts still require a reviewed manual target test after installation; do not re-submit an existing ambiguous target until its remote outcome is resolved.
