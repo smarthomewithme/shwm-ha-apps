@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.2-beta.88
+
+- enables registered personal profiles, Pages and acting profiles for Facebook group campaigns through the original master account profile
+- prepares actors through one guarded coordinator: strong account proof before switching, exact actor proof after switching, fresh account/actor/group/composer checks before submit
+- keeps diagnostic group checks read-only and Page timeline publishing exclusively on Meta Graph API
+- preserves Page preference on CHECK SESSION/reload, actor IDs, approved copy, campaign history and existing profile/cookies during migration
+- displays target error code, description and concrete manual recovery; separates security challenges, wrong actors and ambiguous publication outcomes
+- adds actor-specific group capability reasons and available counts; never substitutes another actor for a selected unavailable actor
+- limits actor affinity to already due queue items with identical due time and priority; preserves schedule order and manual intervention pause
+- restores the missing real submission baseline method and verifies a single composed dialog at the submit boundary
+- adds synthetic security/regression coverage and real Chromium profile-menu/group/composer smoke without contacting live Facebook
+
 ## 0.4.2-beta.87
 
 - adds one exclusive master session broker with WORKER / DIAGNOSTICS / INTERACTIVE ownership

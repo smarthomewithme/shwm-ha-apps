@@ -57,3 +57,31 @@ See [Meta connection guide](META_CONNECTION.md) for App configuration, callback 
 8. Only when deliberately ready, approve a single group target and a single Page post yourself; inspect destination, actor and captured result before testing a larger campaign.
 
 CI uses synthetic content and never makes a live Facebook post. Actual Meta permission approval, callback routing, Supervisor option persistence and live Facebook latency still require validation in the installation.
+
+## Beta.88: one Facebook account, multiple group actors
+
+The saved master Chromium profile is the only browser login. Campaign Module can lock a target to a registered personal profile, Page or acting profile. Own Page timeline publishing in AI Promotion Studio continues to require Meta Graph API; it never acquires the browser broker or switches a profile.
+
+`CHECK SESSION` verifies the account without changing the acting profile. `USE ACTOR` saves the campaign preference. `CHECK ACTOR` explicitly prepares and verifies the selected actor in the same account session. Worker preparation may switch a registered actor before read-only group inspection, but a diagnostic `CHECK GROUP` never switches, joins, composes or submits.
+
+A switch uses a uniquely resolved account menu/profile choice, then strong session and exact fingerprint verification. A unique name is only a navigation hint, never identity proof. The worker pauses on missing/ambiguous choices, wrong accounts, conflicting identity, checkpoint or unverifiable results. A Page does not get a separate login/profile. Three consecutive targets for an unchanged actor reuse the warm context. Actor affinity only breaks ties AFTER due time and priority; it cannot pull a future target forward.
+
+Capabilities are keyed by actor and group. A personal actor's READY state cannot make a Page READY. All enabled groups remain visible with the selected actor's reason and available count. Changing the selector cannot change an already queued target's locked actor.
+
+`ATTENTION REQUIRED` is a status, not a diagnosis. Each target now shows the persisted error code/message and recovery instructions. If historical data has no reason, the interface says so. For security attention, open Browser Console and follow Facebook's own steps, close it with `FINISH LOGIN / CLOSE CONSOLE`, then `CHECK SESSION` and `CHECK ACTOR`. For ambiguous submission, inspect the group first and resolve the outcome; do not blindly retry.
+
+Before submit, fresh strong account proof, exact acting fingerprint and the expected group URL are required. The editable field and submit control must belong to one connected visible dialog, contain the approved copy and have no contradictory group destination. No switch occurs after composition. Existing ambiguous-outcome/duplicate prevention remains in force.
+
+Legacy Page/acting-profile rows move to the existing master identity while retaining actor IDs, capabilities and history. Duplicate legacy fingerprints are retained for review instead of merging historical references speculatively. Successful account checks do not reset an explicitly selected Page preference.
+
+### Manual validation after installing beta.88
+
+A. Personal: choose the saved personal actor, USE ACTOR, CHECK SESSION, CHECK ACTOR and CHECK GROUP on one group. Confirm the displayed actor-specific capability before manually launching a reviewed test campaign.
+
+B. Page in groups: choose the registered Page, USE ACTOR, CHECK ACTOR and CHECK GROUP where the Page already belongs. If Facebook's chooser cannot be verified, switch manually in Browser Console, close it and CHECK ACTOR again. Launch one reviewed test target only when this Page/group pair is READY. Do not create a second login.
+
+C. Switching: execute a reviewed personal target then a reviewed Page target. Verify the expected actors, one master profile and warm context reuse. Check that an unavailable Page/group pair leaves the personal capability unchanged and pauses before any submit.
+
+D. Own Page: use AI Promotion Studio with CONNECT META / selected Page. Confirm Graph API operation without Chromium startup/profile switching. Missing Graph configuration must return GRAPH_API_REQUIRED.
+
+Live Facebook UI/localization, Page eligibility and old-hardware hydration remain runtime validation items. Synthetic Chromium smoke cannot prove live Facebook selector compatibility. CAPTCHA, checkpoint and 2FA always require manual action.
