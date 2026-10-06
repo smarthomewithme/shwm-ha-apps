@@ -6,7 +6,7 @@
 # The scheduled GHCR sync workflow keeps this version synchronized only after
 # the matching container tag is visible in the registry.
 name: SHWM Content Engine
-version: "0.4.2-beta.106"
+version: "0.4.2-beta.107"
 slug: shwm_content_engine
 description: Private Smart Home With Me content promotion engine
 url: https://smarthomewithme.com
