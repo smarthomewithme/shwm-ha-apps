@@ -31,6 +31,9 @@ options:
   facebook_meta_app_id: ""
   facebook_meta_app_secret: ""
   facebook_meta_config_id: ""
+  buffer_api_key: ""
+  buffer_channel_id: ""
+  promotion_page_transport: buffer
 schema:
   ai_provider: list(auto|template|openai_compatible|gemini)
   ai_base_url: url?
@@ -46,3 +49,6 @@ schema:
   facebook_meta_app_secret: password?
   facebook_meta_redirect_uri: url?
   facebook_meta_config_id: str?
+  buffer_api_key: password?
+  buffer_channel_id: str?
+  promotion_page_transport: list(buffer|meta_graph_api)
