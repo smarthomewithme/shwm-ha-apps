@@ -6,7 +6,7 @@
 # The scheduled GHCR sync workflow keeps this version synchronized only after
 # the matching container tag is visible in the registry.
 name: SHWM Content Engine
-version: "0.4.2-beta.141"
+version: "0.4.2-beta.143"
 slug: shwm_content_engine
 description: Private Smart Home With Me content promotion engine
 url: https://smarthomewithme.com
@@ -34,6 +34,9 @@ options:
   buffer_api_key: ""
   buffer_channel_id: ""
   promotion_page_transport: buffer
+  groups_wp_bridge_enabled: false
+  groups_wp_bridge_site_url: ""
+  groups_wp_bridge_key: ""
 schema:
   ai_provider: list(auto|template|openai_compatible|gemini)
   ai_base_url: url?
@@ -52,3 +55,6 @@ schema:
   buffer_api_key: password?
   buffer_channel_id: str?
   promotion_page_transport: list(buffer|meta_graph_api)
+  groups_wp_bridge_enabled: bool
+  groups_wp_bridge_site_url: url?
+  groups_wp_bridge_key: password?
