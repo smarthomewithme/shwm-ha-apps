@@ -36,10 +36,12 @@ For every Home Assistant release, these three versions must describe the same re
 
 ## Correct release flow
 
-1. Build and test the release in private `smarthomewithme/shwm-content-engine`.
-2. Publish the matching versioned image to GHCR.
-3. Update `shwm_content_engine/config.yaml` in this repository to the same version.
+1. CircleCI builds and tests the release from the private `smarthomewithme/shwm-content-engine` distribution branch.
+2. The successful CircleCI `release-beta` job publishes the versioned GHCR image and validates the image manifest.
+3. Only after this verification, update `shwm_content_engine/config.yaml` in this public repository to that same version (currently a separate, deliberate release-metadata change).
 4. Home Assistant Supervisor refreshes this repository and exposes the update.
+
+GitHub Actions is **not** the active publishing or version-sync service. The legacy hourly GHCR polling workflow was retired on 2026-10-11 after it repeatedly failed with HTTP 401. Do not turn it back on or advertise a newer version solely to clear a Home Assistant update message.
 
 ## Diagnostic reminder
 
