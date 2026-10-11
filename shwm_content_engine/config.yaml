@@ -7,7 +7,7 @@
 # Update this public version only after the matching image is verified in GHCR.
 # GitHub Actions is not the active release or synchronization mechanism.
 name: SHWM Content Engine
-version: "0.4.2-beta.143"
+version: "0.4.2-beta.144"
 slug: shwm_content_engine
 description: Private Smart Home With Me content promotion engine
 url: https://smarthomewithme.com
