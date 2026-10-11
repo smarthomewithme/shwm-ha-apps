@@ -3,8 +3,9 @@
 #   smarthomewithme/shwm-ha-apps
 # Application source/builds live in the PRIVATE repo:
 #   smarthomewithme/shwm-content-engine
-# The scheduled GHCR sync workflow keeps this version synchronized only after
-# the matching container tag is visible in the registry.
+# CircleCI builds, tests and publishes the versioned GHCR image from the PRIVATE repo.
+# Update this public version only after the matching image is verified in GHCR.
+# GitHub Actions is not the active release or synchronization mechanism.
 name: SHWM Content Engine
 version: "0.4.2-beta.143"
 slug: shwm_content_engine
