@@ -1,19 +1,30 @@
-# SHWM Content Engine beta.176 — JIT TEST (staged, NOT RELEASED)
+# SHWM Content Engine beta.176 — JIT TEST (isolated staging only)
 
 This branch is an isolated **Home Assistant add-on manifest ONLY**.
 It is intentionally not published as the regular production repository.
 Main stays on beta.175 and every historical beta.169–172 test branch is unchanged.
 
-**Do not install yet.** First confirm that the manual, full-validation
-GitHub Actions workflow built and pushed an immutable
-`ghcr.io/smarthomewithme/shwm-content-engine:0.4.2-beta.176`
-image and returned a digest.
+Release acceptance (2026-10-16): the owner confirmed that the separate,
+manual-approval Google Cloud Build GHCR release completed successfully.
+Its release gates require matching source commit
+`fb60c2a14c770372a454b87d0fa76b2ea51dc3da`, the earlier green
+7/7 validation build `a2c4827e-ee5e-4535-b15b-b643ac92abbb`,
+an immutable push of
+`ghcr.io/smarthomewithme/shwm-content-engine:0.4.2-beta.176`,
+a fresh pull, and a nonempty SHA-256 digest. The actual release digest
+has not been independently copied into this document; confirm it in
+the successful release build logs before installation.
 
-Build controller:
-https://github.com/smarthomewithme/shwm-content-engine/actions/workflows/shwm-jit-beta176-ghcr.yml
-Source draft PR: https://github.com/smarthomewithme/shwm-content-engine/pull/115
+Release controller (Google Cloud Build):
+https://console.cloud.google.com/cloud-build/builds;region=us-central1?project=shwm-content-engine-ci
+Source draft PR (not merged):
+https://github.com/smarthomewithme/shwm-content-engine/pull/115
 
-When the image is verified, add to HA > Add-ons / Apps > Store > Repositories:
+**Use a separate nonproduction HA instance.** The test and production
+manifests share the same add-on slug `shwm_content_engine`; do not add
+this test branch to the production HA instance or replace its repository.
+
+After checking the release digest, add to the separate staging HA instance via Settings > Apps/Add-ons > Store > Repositories:
 
 ```text
 https://github.com/smarthomewithme/shwm-ha-apps#test/beta176-jit
