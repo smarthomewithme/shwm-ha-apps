@@ -24,7 +24,10 @@ panel_title: SHWM beta.178 STAGING TEST
 image: ghcr.io/smarthomewithme/shwm-content-engine-beta178-staging
 options:
   ai_provider: auto
-  gemini_model: gemini-3.7-flash
+  ai_api_key: ""
+  ai_model: ""
+  gemini_api_key: ""
+  gemini_model: gemini-3.8-flash
   facebook_page_publish_mode: auto
   facebook_graph_version: v26.0
   facebook_page_id: ""
