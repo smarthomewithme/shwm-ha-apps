@@ -13,10 +13,10 @@
 
 This branch's `shwm_content_engine/config.yaml` references the **private** staging image via `image` (without a tag, as required by Supervisor) and `version: "0.4.2-beta.177"`. It retains `boot: manual` and `groups_wp_bridge_enabled: false`. The existing manifest `main` is unchanged.
 
-**Use an isolated/non-production HA instance, not the running beta.176 production instance.** Same on-disk add-on slug `shwm_content_engine`; separate Git branch repo IDs do not by themselves prove safe shared runtime state or prevent erroneous owner configuration. Back up before testing.
+**Używaj wyłącznie uzgodnionego, istniejącego środowiska HA test (nie produkcyjnego).** Zachowaj dotychczasowy adres repo, slug `shwm_content_engine`, istniejące dane SQLite/sesję i ustawienia; przed instalacją wykonaj kopię zapasową. Nowy adres repozytorium z innym fragmentem `#branch` tworzy odrębny identyfikator dodatku w Supervisor i nie jest zamiennikiem aktualizacji.
 
-1. On isolated HA Supervisor enable Advanced Mode, then `Settings → Apps → Install app → ⋮ → Registries`; add registry `ghcr.io`, GitHub username and a package read credential with access to the private image. **Never paste secrets in issues/chat/repo.** You may need a classic PAT with `read:packages` for private GHCR.
-2. Add test repo `https://github.com/smarthomewithme/shwm-ha-apps#beta177-private-staging` (short branch alias created for easier HA install; test branch source `test/beta177-private-staging`). Use `Settings → Apps → Install app → ⋮ → Repositories`.
+1. W istniejącym HA testowym sprawdź, czy Supervisor potrafi pobrać prywatny obraz `ghcr.io/smarthomewithme/shwm-content-engine-beta177-staging` z uprawnieniem odczytu pakietów. Jeśli nie — uzupełnij poświadczenia GHCR w Rejestrach. **Nie wpisuj sekretów do repo ani czatu.**
+2. **Nie dodawaj nowego repozytorium ani kanału HA.** Użyj istniejącego repozytorium testowego przypiętego do gałęzi `test/beta177-private-staging`; odśwież jego metadane w sklepie HA. Nie przełączaj adresu na `#beta177-private-staging` — to niezamierzony dodatkowy alias, który nie jest częścią obowiązującej ścieżki testowej.
 3. Inspect displayed version `0.4.2-beta.177`, selected image and architecture `amd64`. **Only install on isolated HA and only when ready**. Keep worker PAUSED, no Facebook actions and no unsanctioned WordPress writes.
 4. Test Gemini Polish master and 3 FR candidates for WP article #260 in preview, separate owner copy/schedule consent, signed WP→HA ACK and reload/restart persistence. Never authorize execution/public posting as a side effect of copy/schedule testing.
 
