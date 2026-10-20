@@ -1,6 +1,6 @@
 # Smart Home With Me BLE USB Scanner + ESPHome Generator v0.2
 
-GPL-3.0-or-later source, development build (not production-ready).
+GPL-3.0-or-later source, **release candidate** (compiled, not hardware-tested or published).
 
 ## What users will do
 
@@ -14,17 +14,22 @@ GPL-3.0-or-later source, development build (not production-ready).
 
 ## What is actually built here
 
-- Functional web interface in `site/index.html`, `site/app.mjs`, `site/core.mjs`: Web Serial live JSONL capture, device grouping, Theengs integration hook, SHWM LC026 decoding, safe YAML generator, clipboard/download. UI is tested on local Chromium with simulated scanner data; no real ESP32 attached here.
+- Functional web interface in `site/index.html`, `site/app.mjs`, `site/core.mjs`: Web Serial live JSONL capture, device grouping, Theengs integration hook, SHWM LC026 decoding, safe YAML generator, clipboard/download. DOM interaction smoke-tested in local Chromium with simulated LC026 data; official Theengs WASM tested in both Chromium and Node.js. No real ESP32 attached here.
 - Native ESP32 NimBLE scanner firmware source at `scanner/src/main.cpp` (no Wi-Fi, no vendor cloud), PlatformIO configs for ESP32 DevKit and Seeed XIAO ESP32-C3.
 - ESP Web Tools installer button with explicit manifest `site/firmware/manifest.json`; button stays hidden/disabled until firmware images are deployed.
-- GitHub Actions source workflow that builds and merges both firmware images, downloads the official Theengs WebAssembly binary + JS, runs tests, and deploys the static site via GitHub Pages.
+- GitHub Actions workflows that build and merge both firmware images and build the official Theengs WebAssembly module directly from the pinned upstream GPL source; dedicated GitHub Pages deployment workflow is included but not enabled in the user repository.
 - Eight unit tests in `tests/decoder.test.mjs`.
 
-## IMPORTANT build/publish gates
+## Verified build results (October 20, 2026)
 
-**NO `.bin` firmware is shipped in this ZIP**: this runtime cannot download/compile the Arduino toolchain. GitHub Actions must compile firmware and publish both binaries before the installer becomes visible. The workflow is written but **has not been run**. Do not claim first-flash support works until GitHub Actions and a physical board test pass. Verify the Theengs assets' actual GitHub Pages paths (they are retrieved from its browser parser bundle), GPL notices, and runtime in the deployed site. If upstream Theengs files have moved, adjust the workflow URLs.
+**Compiled BIN files ARE included in this release-candidate ZIP** under `site/firmware/bin/`. GitHub Actions built both targets and merged each image for ESP Web Tools:
+- ESP32 DevKit: `esp32dev.bin` (666,416 bytes), SHA-256 `55be98209e590e53eaf741c81745da496a7d521ff62198b37ebcaabf648e57a2`.
+- Seeed XIAO ESP32-C3: `seeed_xiao_esp32c3.bin` (571,904 bytes), SHA-256 `7943701461deab150b53ac79104e0faf9b989d08b47d9947c0faa8d767560174`.
+- Official Theengs Decoder WebAssembly was built from GitHub release `v2.4.5` using Emscripten 3.1.61 as `site/vendor/theengs_decoder_wasm.mjs` (single-file JS + embedded WASM).
+- Confirmed Theengs decoder in Node.js and Chromium by decoding a real supported ClearGrass/Qingping sample.
+- Eight decoder unit tests passed. UI buttons passed a simulated browser DOM test; native USB and actual flash tests are still missing.
 
-`site/firmware/manifest.json` references ESP32 and ESP32-C3 images. They MUST contain merged images appropriate to their chip variant. Do not mix an ESP32 binary with ESP32-C3. For the C3, verify physical board USB CDC mode.
+**Do not call this hardware verified.** We still need USB/serial connection and first/second flash tests on both real board types. The manifest only lists the two compiled targets; mismatching firmware and chip may cause failure. The static site MUST be served from HTTPS for Web Serial. Do not publish the WordPress tutorial as complete until hardware testing passes.
 
 ## Deploy (new dedicated GitHub repository recommended)
 
@@ -38,4 +43,4 @@ Avoid WordPress inline JS: Gutenberg may sanitize `<script>` tags, and caching c
 
 ## Data and third-party components
 
-SHWM code GPL-3.0-or-later. Theengs Decoder is GPL-3.0; its own binary and JS are fetched on deployment, not copied verbatim into this source archive. See `THIRD_PARTY.md`. ESP Web Tools is consumed from its official distribution. No BLE uploads to our servers: Web Serial and WebAssembly run locally in the browser.
+SHWM code GPL-3.0-or-later. Theengs Decoder is GPL-3.0-only. Its independently built binary in `site/vendor/` comes from the official v2.4.5 source; we retain attribution and offer the source URL and version. See `THIRD_PARTY.md`. ESP Web Tools is consumed from its official distribution. No BLE uploads to our servers: Web Serial and WebAssembly run locally in the browser.
