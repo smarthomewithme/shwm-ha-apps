@@ -1,0 +1,48 @@
+name: SHWM BLE scanner - isolated firmware build
+on:
+  push:
+    branches:
+      - feature/shwm-ble-usb-installer
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Unit-test decoder and generate YAML
+        run: |
+          cd tools/shwm-ble-usb-scanner
+          node --test tests/*.test.mjs
+      - name: Install toolchain
+        run: python -m pip install --upgrade platformio esptool
+      - name: Build ESP32 DevKit and Seeed XIAO ESP32-C3
+        run: |
+          cd tools/shwm-ble-usb-scanner/scanner
+          pio run -e esp32dev
+          pio run -e seeed_xiao_esp32c3
+      - name: Assemble ESP Web Tools images
+        run: |
+          set -euo pipefail
+          cd tools/shwm-ble-usb-scanner
+          mkdir -p site/firmware/bin
+          for env in esp32dev seeed_xiao_esp32c3; do
+            p="scanner/.pio/build/$env"
+            dest="site/firmware/bin/$env.bin"
+            if [ "$env" = esp32dev ]; then chip=esp32; offset=0x1000; else chip=esp32c3; offset=0x0; fi
+            test -s "$p/bootloader.bin" && test -s "$p/partitions.bin" && test -s "$p/firmware.bin" && test -s "$p/boot_app0.bin"
+            python -m esptool --chip "$chip" merge-bin -o "$dest" --flash-mode dio --flash-freq 40m --flash-size 4MB \
+              "$offset" "$p/bootloader.bin" 0x8000 "$p/partitions.bin" \
+              0xe000 "$p/boot_app0.bin" 0x10000 "$p/firmware.bin"
+            test -s "$dest"
+          done
+          sha256sum site/firmware/bin/*.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shwm-ble-scanner-merged-binaries
+          path: tools/shwm-ble-usb-scanner/site/firmware
+          if-no-files-found: error

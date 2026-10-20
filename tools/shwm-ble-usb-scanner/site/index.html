@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SHWM BLE Decoder & ESPHome Generator — Live Scanner</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif}body{background:#0c1320;color:#f0f4fa;max-width:1020px;padding:20px;margin:auto;line-height:1.55}h1{font-size:clamp(1.45rem,3vw,2.1rem)}h2{margin:0 0 12px;font-size:1.2rem}section{border:1px solid #344159;border-radius:14px;padding:18px;margin:16px 0;background:#111d2d}p{margin:8px 0}small,.muted{color:#bac9d8}button,select{background:#1e65bd;border:0;color:white;border-radius:7px;padding:10px 14px;cursor:pointer;font:inherit}button:hover:not(:disabled){background:#2d7ad8}button:disabled{opacity:.5;cursor:not-allowed}textarea,pre{width:100%;box-sizing:border-box;background:#0b1525;color:#daefff;font:12px/1.5 ui-monospace,monospace;padding:12px;border:1px solid #35465c;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}textarea{min-height:110px}pre{max-height:260px;overflow:auto;min-height:70px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #354052;text-align:left;white-space:nowrap}td button{font-size:.85rem}#status{padding:10px;border-radius:7px;background:#2a394c}#status[data-kind=ok]{background:#164734}#status[data-kind=warn]{background:#674522}.warning{border-left:4px solid #f7b84c;padding:12px;background:#3a2e20}.notice{border-left:4px solid #51bada;padding:12px;background:#182e40}.flow{font-weight:600;color:#9ecdfb}a{color:#98cfff}#install-wrapper{padding:12px;border:1px dashed #5e7a90;border-radius:8px;margin-top:12px}#install-wrapper[hidden]{display:none}@media(max-width:700px){.grid{grid-template-columns:1fr}}.sr-only{position:absolute;left:-10000px}
+</style>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script></head>
+<body>
+<h1>SHWM BLE Decoder &amp; ESPHome Generator <small>v0.2 developer preview</small></h1>
+<p>Explore Bluetooth LE advertisements without the device manufacturer's app, proprietary account, or vendor cloud. Works locally in your browser. You still need ESPHome Device Builder to compile your final YAML.</p>
+<p class="warning"><strong>Before flashing:</strong> the initial BLE Scanner replaces any firmware already on your ESP32. Back up an existing ESPHome configuration first. Use a spare board when possible. Only click Install on the correct USB device.</p>
+<section><h2>Step 1 · First time? Install the BLE Scanner</h2>
+<p>Plug an ESP32 DevKit or supported XIAO ESP32-C3 into your computer with a USB <strong>data</strong> cable. In Chrome or Edge, click <strong>Install BLE Scanner</strong> and confirm the correct USB/COM port. This is a temporary program that receives raw BLE advertisements and prints them over USB; it does not require Wi-Fi or the original product app.</p>
+<p id="firmware-notice" class="notice">Checking scanner firmware…</p>
+<div id="install-wrapper" hidden><esp-web-install-button manifest="./firmware/manifest.json"><button type="button" slot="activate">Install BLE Scanner on ESP32</button><span slot="unsupported">Use a Web Serial–capable desktop browser, such as Chrome or Edge.</span></esp-web-install-button></div>
+<p class="muted"><small>Installation requires precompiled and hosted ESP32 firmware; if this button is unavailable, the binary build is not ready. Do not substitute the ESPHome YAML for the temporary USB scanner.</small></p></section>
+<section><h2>Step 2 · Connect via USB and scan live</h2>
+<p>After installing the scanner, reconnect to the USB port. Click <strong>Connect and scan live</strong>, choose the same serial device and turn on your BLE gadget (for a scale, step on it). New readings should appear below without copying logs. Web Serial needs HTTPS and your permission.</p>
+<div><button type="button" id="connect">Connect and scan live</button> <button type="button" id="demo">Load LC026 example</button></div>
+<p id="status" role="status">Waiting for scanner.</p><p><small>Decoder engine: <span id="engine">Loading…</span></small></p>
+<div class="table-wrap"><table><thead><tr><th>BLE device (MAC)</th><th>Name</th><th>RSSI</th><th>Decoded measurement</th><th>Packets</th></tr></thead><tbody id="devices"></tbody></table></div>
+<details><summary>Alternative: paste captured JSONL advertisements</summary><p>Only needed if your browser cannot use Web Serial. Each JSON line must contain a MAC and advertised manufacturer/service data from a compatible scanner.</p><textarea id="capture" aria-label="Raw USB JSON lines"></textarea><button type="button" id="import">Import RAW packets</button></details>
+</section>
+<section><h2>Step 3 · Decode and generate final ESPHome YAML</h2>
+<p id="selected">Select a device from the list above. Known devices are decoded with Theengs (when its WASM engine has loaded) or a verified SHWM profile. Unknown protocols remain unrecognized rather than guessed.</p>
+<div class="grid"><div><strong>RAW</strong><pre id="raw">No device selected</pre></div><div><strong>Decoded</strong><pre id="decoded">No device selected</pre></div></div>
+<p><label for="board">Target ESP32: </label><select id="board"><option value="esp32dev">Generic ESP32 DevKit</option><option value="seeed_xiao_esp32c3">Seeed XIAO ESP32-C3</option></select></p>
+<p class="muted">Currently, only the validated LC026 profile has an ESPHome YAML template. Theengs can recognize other gadgets, but recognition does not imply a universal YAML exists for them.</p>
+<button type="button" id="make-yaml" disabled>Generate ESPHome YAML</button>
+<textarea id="yaml" aria-label="Generated ESPHome YAML" readonly placeholder="Your generated YAML will appear here"></textarea>
+<button type="button" id="copy">Copy YAML</button> <button type="button" id="download">Download YAML</button>
+</section>
+<section><h2>Step 4 · Replace scanner with final ESPHome firmware</h2>
+<p>Go to <a href="https://esphome.io/install/">ESPHome Device Builder</a>. Create a node for <strong>your exact ESP32 model</strong>. Replace the initial sample text <em>in the YAML editor</em> with the YAML generated above, set your local secrets (Wi-Fi, API key and OTA password), then use <strong>Validate</strong> and <strong>Install → Manual download</strong> to compile and obtain the final firmware.</p>
+<p><strong>Disconnect the live scanner first</strong> so the USB port becomes available. Flash the <em>compiled</em> image using the Device Builder's supported USB process or <a href="https://web.esphome.io/">ESPHome Web</a>. This second installation <strong>overwrites the temporary scanner automatically</strong>; do not manually erase the chip. Then add the ESPHome device in Home Assistant. ESPHome Web alone does <strong>not</strong> compile YAML.</p>
+</section>
+<footer class="muted"><small>GPL-3.0-or-later · Decoder: Theengs (GPL-3.0), original sources credited in THIRD_PARTY.md · No cloud uploads · No original device app needed · Bluetooth LE advertising only; GATT devices require future support.</small></footer>
+<script type="module" src="./app.mjs"></script>
+</body></html>

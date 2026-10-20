@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {normalizeAdvertisement, decodeLC026, espHomeScaleYAML, parseLine,toTheengs} from '../site/core.mjs';
+const frame={type:'adv',mac:'AA:BB:CC:DD:EE:FF',rssi:-80,manufacturerdata:'C022221A17700A0125AABBCCDDEEFF',manufacturerpayload:'221A17700A0125AABBCCDDEEFF',manufacturerid:'0x22C0'};
+test('scanner JSONL is parsed',()=>{const r=parseLine(JSON.stringify(frame));assert.equal(r.mac,frame.mac);assert.equal(r.manufacturerid,'0X22C0')});
+test('stable LC026 87.30 kg',()=>{const w=decodeLC026(normalizeAdvertisement(frame));assert.equal(w.weight_kg,87.30);assert.equal(w.stable,true)});
+test('unknown packet remains unknown',()=>{const w=decodeLC026(normalizeAdvertisement({...frame,manufacturerpayload:'01020304'}));assert.equal(w,null)});
+test('MAC spoofing not accepted',()=>{const w=decodeLC026(normalizeAdvertisement({...frame,mac:'AA:BB:CC:DD:EE:00'}));assert.equal(w,null)});
+test('unstable flags not stable',()=>{const w=decodeLC026(normalizeAdvertisement({...frame,manufacturerpayload:'221A17700A0124AABBCCDDEEFF'}));assert.equal(w.stable,false)});
+test('Theengs canonical JSON payload fields',()=>{const v=toTheengs(normalizeAdvertisement(frame));assert.equal(v.manufacturerdata,'C022221A17700A0125AABBCCDDEEFF');assert.equal(v.id,frame.mac)});
+test('YAML full output has correct MAC, OTA and secrets and selects actual board',()=>{const y=espHomeScaleYAML(frame.mac,'seeed_xiao_esp32c3');assert.match(y,/board: seeed_xiao_esp32c3/);assert.match(y,/AA:BB:CC:DD:EE:FF/);assert.match(y,/!secret wifi_password/);assert.match(y,/ota:/)});
+test('board/MAC injection rejected',()=>{assert.throws(()=>espHomeScaleYAML('DROP;TABLES'));assert.throws(()=>espHomeScaleYAML(frame.mac,'strange_board'))});
