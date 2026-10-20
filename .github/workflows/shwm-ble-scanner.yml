@@ -51,19 +51,28 @@ jobs:
           name: shwm-ble-scanner-merged-binaries
           path: tools/shwm-ble-usb-scanner/site/firmware
           if-no-files-found: error
-      - name: Include official Theengs Decoder WASM for local browser decoding
+      - uses: actions/checkout@v4
+        with:
+          repository: theengs/decoder
+          ref: v2.4.5
+          path: third_party/theengs
+          submodules: recursive
+          persist-credentials: false
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: '3.1.61'
+          actions-cache-folder: emsdk-cache
+      - name: Compile upstream Theengs Decoder WebAssembly from source
         run: |
           set -euo pipefail
-          v=tools/shwm-ble-usb-scanner/site/vendor
-          mkdir -p "$v"
-          curl --fail --location --retry 3 --show-error --silent \
-            https://decoder.theengs.io/wasm/theengs_decoder_wasm.mjs \
-            -o "$v/theengs_decoder_wasm.mjs"
-          curl --fail --location --retry 3 --show-error --silent \
-            https://decoder.theengs.io/wasm/theengs_decoder_wasm.wasm \
-            -o "$v/theengs_decoder_wasm.wasm"
-          test -s "$v/theengs_decoder_wasm.mjs" && test -s "$v/theengs_decoder_wasm.wasm"
-          sha256sum "$v"/theengs_decoder_wasm.*
+          cd third_party/theengs/nodejs/theengs-decoder
+          npm run build:web
+          cd ../../..
+          dest=tools/shwm-ble-usb-scanner/site/vendor
+          mkdir -p "$dest"
+          cp third_party/theengs/docs/.vitepress/public/wasm/theengs_decoder_wasm.mjs "$dest/"
+          test -s "$dest/theengs_decoder_wasm.mjs"
+          sha256sum "$dest/theengs_decoder_wasm.mjs"
       - uses: actions/upload-artifact@v4
         with:
           name: shwm-ble-scanner-complete-web-app
