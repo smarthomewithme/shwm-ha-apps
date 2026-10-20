@@ -67,7 +67,7 @@ jobs:
           set -euo pipefail
           cd third_party/theengs/nodejs/theengs-decoder
           npm run build:web
-          cd ../../..
+          cd ../../../..
           dest=tools/shwm-ble-usb-scanner/site/vendor
           mkdir -p "$dest"
           cp third_party/theengs/docs/.vitepress/public/wasm/theengs_decoder_wasm.mjs "$dest/"
