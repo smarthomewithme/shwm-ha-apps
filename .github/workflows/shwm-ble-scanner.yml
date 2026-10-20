@@ -51,3 +51,21 @@ jobs:
           name: shwm-ble-scanner-merged-binaries
           path: tools/shwm-ble-usb-scanner/site/firmware
           if-no-files-found: error
+      - name: Include official Theengs Decoder WASM for local browser decoding
+        run: |
+          set -euo pipefail
+          v=tools/shwm-ble-usb-scanner/site/vendor
+          mkdir -p "$v"
+          curl --fail --location --retry 3 --show-error --silent \
+            https://decoder.theengs.io/wasm/theengs_decoder_wasm.mjs \
+            -o "$v/theengs_decoder_wasm.mjs"
+          curl --fail --location --retry 3 --show-error --silent \
+            https://decoder.theengs.io/wasm/theengs_decoder_wasm.wasm \
+            -o "$v/theengs_decoder_wasm.wasm"
+          test -s "$v/theengs_decoder_wasm.mjs" && test -s "$v/theengs_decoder_wasm.wasm"
+          sha256sum "$v"/theengs_decoder_wasm.*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shwm-ble-scanner-complete-web-app
+          path: tools/shwm-ble-usb-scanner/site
+          if-no-files-found: error
