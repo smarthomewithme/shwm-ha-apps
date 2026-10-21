@@ -1,0 +1,16 @@
+{
+  "name": "SHWM BLE USB Scanner - nodemcu-32s",
+  "version": "0.3.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "../bin/nodemcu-32s.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
