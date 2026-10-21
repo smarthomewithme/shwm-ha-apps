@@ -5,26 +5,30 @@
 </style>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script></head>
 <body>
-<h1>SHWM BLE Decoder &amp; ESPHome Generator <small>v0.2 developer preview</small></h1>
+<h1>SHWM BLE Decoder &amp; ESPHome Generator <small>v0.3 six-board preview</small></h1>
 <p>Explore Bluetooth LE advertisements without the device manufacturer's app, proprietary account, or vendor cloud. Works locally in your browser. You still need ESPHome Device Builder to compile your final YAML.</p>
 <p class="warning"><strong>Before flashing:</strong> the initial BLE Scanner replaces any firmware already on your ESP32. Back up an existing ESPHome configuration first. Use a spare board when possible. Only click Install on the correct USB device.</p>
 <section><h2>Step 1 · First time? Install the BLE Scanner</h2>
-<p>Plug an ESP32 DevKit or supported XIAO ESP32-C3 into your computer with a USB <strong>data</strong> cable. In Chrome or Edge, click <strong>Install BLE Scanner</strong> and confirm the correct USB/COM port. This is a temporary program that receives raw BLE advertisements and prints them over USB; it does not require Wi-Fi or the original product app.</p>
+<p>Plug a supported ESP32 board into your computer with a USB <strong>data</strong> cable. In Chrome or Edge, click <strong>Install BLE Scanner</strong> and confirm the correct USB/COM port. This is a temporary program that receives raw BLE advertisements and prints them over USB; it does not require Wi-Fi or the original product app.</p>
+<p><label for="install-board"><strong>Choose your exact ESP32 model before installing the scanner:</strong></label><br><select id="install-board" aria-label="Temporary BLE scanner board model"></select></p>
+<p class="muted" id="board-warning">Choose the exact board and USB port. Wrong firmware may require recovery flashing.</p>
 <p id="firmware-notice" class="notice">Checking scanner firmware…</p>
-<div id="install-wrapper" hidden><esp-web-install-button manifest="./firmware/manifest.json"><button type="button" slot="activate">Install BLE Scanner on ESP32</button><span slot="unsupported">Use a Web Serial–capable desktop browser, such as Chrome or Edge.</span></esp-web-install-button></div>
+<div id="install-wrapper" hidden><esp-web-install-button id="flash-tool" manifest="./firmware/manifests/esp32dev.json"><button type="button" slot="activate">Install BLE Scanner on ESP32</button><span slot="unsupported">Use a Web Serial–capable desktop browser, such as Chrome or Edge.</span></esp-web-install-button></div>
 <p class="muted"><small>Installation requires precompiled and hosted ESP32 firmware; if this button is unavailable, the binary build is not ready. Do not substitute the ESPHome YAML for the temporary USB scanner.</small></p></section>
 <section><h2>Step 2 · Connect via USB and scan live</h2>
 <p>After installing the scanner, reconnect to the USB port. Click <strong>Connect and scan live</strong>, choose the same serial device and turn on your BLE gadget (for a scale, step on it). New readings should appear below without copying logs. Web Serial needs HTTPS and your permission.</p>
 <div><button type="button" id="connect">Connect and scan live</button> <button type="button" id="demo">Load LC026 example</button></div>
 <p id="status" role="status">Waiting for scanner.</p><p><small>Decoder engine: <span id="engine">Loading…</span></small></p>
-<div class="table-wrap"><table><thead><tr><th>BLE device (MAC)</th><th>Name</th><th>RSSI</th><th>Decoded measurement</th><th>Packets</th></tr></thead><tbody id="devices"></tbody></table></div>
+<p class="muted"><strong>Live:</strong> <span id="rx-count">0</span> packets · <span id="known-count">0</span> decoded devices · <span id="last-packet">waiting for BLE advertisements</span></p>
+<p><label><input id="recognized-only" type="checkbox"> Show only recognized protocols</label></p>
+<div class="table-wrap"><table><thead><tr><th>BLE device (MAC)</th><th>Name</th><th>RSSI</th><th>Live decoded measurement</th><th>Packets</th><th>Last seen</th></tr></thead><tbody id="devices"></tbody></table></div>
 <details><summary>Alternative: paste captured JSONL advertisements</summary><p>Only needed if your browser cannot use Web Serial. Each JSON line must contain a MAC and advertised manufacturer/service data from a compatible scanner.</p><textarea id="capture" aria-label="Raw USB JSON lines"></textarea><button type="button" id="import">Import RAW packets</button></details>
 </section>
 <section><h2>Step 3 · Decode and generate final ESPHome YAML</h2>
 <p id="selected">Select a device from the list above. Known devices are decoded with Theengs (when its WASM engine has loaded) or a verified SHWM profile. Unknown protocols remain unrecognized rather than guessed.</p>
 <div class="grid"><div><strong>RAW</strong><pre id="raw">No device selected</pre></div><div><strong>Decoded</strong><pre id="decoded">No device selected</pre></div></div>
-<p><label for="board">Target ESP32: </label><select id="board"><option value="esp32dev">Generic ESP32 DevKit</option><option value="seeed_xiao_esp32c3">Seeed XIAO ESP32-C3</option></select></p>
-<p class="muted">Currently, only the validated LC026 profile has an ESPHome YAML template. Theengs can recognize other gadgets, but recognition does not imply a universal YAML exists for them.</p>
+<p><label for="board">Target ESP32: </label><select id="board" aria-label="Final ESPHome board model"></select><br><small id="board-note">Board selection also determines the compiled firmware target.</small></p>
+<p class="muted">Currently, only the validated LC026 profile has an ESPHome YAML template. Theengs decodes recognized device packets live, but its decoded object is not automatically an ESPHome driver. YAML sensor generation is deliberately restricted to verified protocols.</p>
 <button type="button" id="make-yaml" disabled>Generate ESPHome YAML</button>
 <textarea id="yaml" aria-label="Generated ESPHome YAML" readonly placeholder="Your generated YAML will appear here"></textarea>
 <button type="button" id="copy">Copy YAML</button> <button type="button" id="download">Download YAML</button>
