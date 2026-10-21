@@ -1,8 +1,9 @@
-import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML } from './core.mjs';
+import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML, BOARD_CATALOG, getBoard, summarizeDecoded } from './core.mjs';
 
 const $ = selector => document.querySelector(selector);
 const byMac = new Map();
-let port=null, reader=null, stop=false, moduleDecoder=null, selected='';
+let port=null, reader=null, stop=false, moduleDecoder=null, selected='', packetCount=0, pendingRender=null;
+let flashCheckSeq=0;
 let sample={type:'adv',mac:'AA:BB:CC:DD:EE:FF',rssi:-73,name:'',
   manufacturerdata:'C022221A17700A0125AABBCCDDEEFF',manufacturerpayload:'221A17700A0125AABBCCDDEEFF',manufacturerid:'0x22C0',servicedata:'',servicedatauuid:''};
 const status=(str, kind='info')=>{$('#status').textContent=str;$('#status').dataset.kind=kind;};
@@ -33,26 +34,34 @@ function decodeWithTheengs(frame) {
 }
 function accept(obj) {
   const frame=normalizeAdvertisement(obj);if(!frame)return;
+  packetCount++;
   const previous=byMac.get(frame.mac); const lc=decodeLC026(frame); const theengs=decodeWithTheengs(frame);
   const record={frame,count:(previous?.count||0)+1,lc:lc||previous?.lc||null,
    theengs:theengs||previous?.theengs||null,updated:new Date()};
   if(byMac.size>=150&&!byMac.has(frame.mac))byMac.delete(byMac.keys().next().value);
   byMac.set(frame.mac,record);
-  render();
+  if(pendingRender===null) pendingRender=setTimeout(()=>{pendingRender=null;render();},140);
 }
 function render(){
  const host=$('#devices');
- if(!byMac.size){host.innerHTML='<tr><td colspan="5">No devices yet. Install the scanner, connect USB, then wake up a BLE sensor.</td></tr>';return;}
- const items=[...byMac.values()].sort((a,b)=>b.updated-a.updated);
+ const recognized=[...byMac.values()].filter(v=>v.lc||v.theengs).length;
+ $('#rx-count').textContent=String(packetCount);
+ $('#known-count').textContent=String(recognized);
+ $('#last-packet').textContent=packetCount?'latest '+new Date().toLocaleTimeString():'waiting for BLE advertisements';
+ const items=[...byMac.values()].filter(x=>!$('#recognized-only').checked||x.lc||x.theengs)
+   .sort((a,b)=>b.updated-a.updated).slice(0,150);
+ if(!items.length){host.innerHTML='<tr><td colspan="6">No matching devices yet. Connect USB and wake up your BLE sensor, or disable the recognized-only filter.</td></tr>';return;}
  host.innerHTML=items.map(item=>{
-  const x=item.frame,decoded=item.lc?`${item.lc.weight_kg.toFixed(2)} kg ${item.lc.stable?'(stable)':'(changing)'}`:
-  item.theengs?`${escape(item.theengs.model||item.theengs.model_id||item.theengs.brand||'Theengs recognized')}`:'Unrecognized RAW';
+  const x=item.frame;
+  const summary=summarizeDecoded(item.theengs,item.lc);
+  const last=item.updated.toLocaleTimeString();
   return `<tr><td><button type="button" data-mac="${escape(x.mac)}">${escape(x.mac)}</button></td>`+
-    `<td>${escape(x.name||'—')}</td><td>${escape(x.rssi)}</td><td>${escape(decoded)}</td><td>${item.count}</td></tr>`;
+    `<td>${escape(x.name||'—')}</td><td>${escape(x.rssi)}</td><td>${escape(summary)}</td><td>${item.count}</td><td>${escape(last)}</td></tr>`;
  }).join('');
  [...host.querySelectorAll('[data-mac]')].forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.mac;showSelection();}));
  if(selected)showSelection();
 }
+$('#recognized-only').addEventListener('change',render);
 function showSelection(){const r=byMac.get(selected);if(!r)return;
  $('#selected').textContent=`Device: ${selected} | RSSI ${r.frame.rssi}`;
  $('#raw').textContent=JSON.stringify(r.frame,null,2);
@@ -105,15 +114,64 @@ $('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writ
 $('#download').addEventListener('click',()=>{const text=$('#yaml').value;if(!text)return;
  const u=URL.createObjectURL(new Blob([text],{type:'text/yaml;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='shwm-lc026-final-esphome.yaml';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000);
 });
-$('#firmware-notice').textContent='The scanner installer is available only after two firmware builds are generated and hosted under /firmware/bin/. Do NOT flash an arbitrary .bin file.';
-fetch('./firmware/manifest.json',{cache:'no-cache'}).then(r=>r.json()).then(async manifest=>{
- const parts=manifest.builds.flatMap(x=>x.parts);
- const checks=await Promise.all(parts.map(async x=>{
-   const res=await fetch(new URL(x.path, new URL('./firmware/', location.href)).href,{method:'HEAD'});
-   return res.ok && Number(res.headers.get('content-length')||0)>100000;
- }));
- if(checks.every(Boolean)){document.querySelector('#install-wrapper').hidden=false;
-  $('#firmware-notice').textContent='Firmware images found. Click Install BLE Scanner, then reconnect USB in Step 2.';
- } else {$('#firmware-notice').textContent='Scanner binaries not deployed yet. Installer is disabled until verified builds are hosted.';}
-}).catch(()=>{$('#firmware-notice').textContent='Scanner binaries not deployed yet. Install step unavailable.'});
-initTheengs();render();
+// Board choices are intentionally restricted to models compiled by the isolated CI build.
+// Separate manifests prevent ESP Web Tools silently picking the wrong board within one chip family.
+function initializeBoardSelectors(){
+ const options=BOARD_CATALOG.map(b=>`<option value="${b.id}">${escape(b.label)}</option>`).join('');
+ $('#install-board').innerHTML=options;
+ $('#board').innerHTML=options;
+ $('#install-board').addEventListener('change',()=>{
+   $('#board').value=$('#install-board').value;
+   updateBoardWarning();
+   void verifySelectedFirmware();
+ });
+ $('#board').addEventListener('change',()=>{
+   $('#board-note').textContent='Final ESPHome target: '+(getBoard($('#board').value)?.label||'unsupported board')+
+      '. Flashing the final ESPHome firmware replaces your temporary USB scanner.';
+   if($('#yaml').value && selected && byMac.get(selected)?.lc?.stable)
+      $('#yaml').value=espHomeScaleYAML(selected,$('#board').value);
+ });
+ updateBoardWarning();
+}
+function updateBoardWarning(){
+ const b=getBoard($('#install-board').value);
+ $('#board-warning').textContent=b
+   ? 'Selected '+b.label+' ('+b.chipFamily+', '+b.usb+'). IMPORTANT: confirm the correct USB port. Installing a scanner REPLACES any existing firmware.'
+   : 'Choose an explicitly supported board first.';
+ $('#board-note').textContent='Final ESPHome target: '+(getBoard($('#board').value)?.label||'not selected');
+}
+async function verifySelectedFirmware(){
+ const seq=++flashCheckSeq;
+ const b=getBoard($('#install-board').value);
+ const wrapper=$('#install-wrapper');
+ wrapper.hidden=true;
+ if(!b){$('#firmware-notice').textContent='Unsupported board.';return;}
+ if(!window.isSecureContext){$('#firmware-notice').textContent='Open this tool over HTTPS to enable USB firmware flashing.';return;}
+ const path='./firmware/manifests/'+b.id+'.json';
+ $('#flash-tool').setAttribute('manifest',path);
+ $('#firmware-notice').textContent='Checking precompiled firmware for '+b.label+'…';
+ try{
+   const url=new URL(path,window.location.href);
+   const response=await fetch(url.href,{cache:'no-store'});
+   if(!response.ok)throw new Error('manifest HTTP '+response.status);
+   const manifest=await response.json();
+   if(!Array.isArray(manifest.builds)||manifest.builds.length!==1)throw new Error('manifest must contain one build');
+   const build=manifest.builds[0];
+   if(build.chipFamily!==b.chipFamily || !Array.isArray(build.parts)||build.parts.length!==1)
+     throw new Error('board/chip manifest mismatch');
+   const binary=new URL(build.parts[0].path,url);
+   if(binary.origin!==window.location.origin)throw new Error('firmware origin mismatch');
+   const head=await fetch(binary.href,{method:'HEAD',cache:'no-store'});
+   if(!head.ok || Number(head.headers.get('content-length')||0)<100000)throw new Error('firmware missing');
+   if(seq!==flashCheckSeq)return;
+   wrapper.hidden=false;
+   $('#firmware-notice').textContent='Ready: precompiled BLE scanner for '+b.label+'. Verify the model before installing.';
+ }catch(err){
+   if(seq!==flashCheckSeq)return;
+   $('#firmware-notice').textContent='Installer disabled: '+String(err.message||err)+'. Run the CI build and deploy its exact firmware files first.';
+ }
+}
+initializeBoardSelectors();
+void verifySelectedFirmware();
+initTheengs();
+render();
