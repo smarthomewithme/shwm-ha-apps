@@ -10,10 +10,10 @@ test('unstable flags not stable',()=>{const w=decodeLC026(normalizeAdvertisement
 test('Theengs canonical JSON payload fields',()=>{const v=toTheengs(normalizeAdvertisement(frame));assert.equal(v.manufacturerdata,'C022221A17700A0125AABBCCDDEEFF');assert.equal(v.id,frame.mac)});
 test('YAML full output has correct MAC, OTA and secrets and selects actual board',()=>{const y=espHomeScaleYAML(frame.mac,'seeed_xiao_esp32c3');assert.match(y,/board: seeed_xiao_esp32c3/);assert.match(y,/AA:BB:CC:DD:EE:FF/);assert.match(y,/!secret wifi_password/);assert.match(y,/ota:/)});
 test('board/MAC injection rejected',()=>{assert.throws(()=>espHomeScaleYAML('DROP;TABLES'));assert.throws(()=>espHomeScaleYAML(frame.mac,'strange_board'))});
-test('six supported board families are BLE-capable ESP32 targets',()=>{
+test('expanded board catalog covers only BLE-capable ESP32 families',()=>{
   assert.equal(BOARD_CATALOG.length,45);
   assert.equal(SCANNER_BOARDS.length,23);
-  assert.equal(new Set(BOARD_CATALOG.map(x=>x.id)).size,6);
+  assert.equal(new Set(BOARD_CATALOG.map(x=>x.id)).size,45);
   assert.deepEqual(new Set(BOARD_CATALOG.map(x=>x.chipFamily)),new Set(['ESP32','ESP32-C3','ESP32-S3']));
   assert.equal(getBoard('esp32-s3-devkitc-1').chipFamily,'ESP32-S3');
   assert.equal(getBoard('esp32-s2-saola-1'),null);
