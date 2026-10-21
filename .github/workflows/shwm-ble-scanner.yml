@@ -1,0 +1,241 @@
+name: SHWM BLE scanner - isolated firmware build
+on:
+  push:
+    branches:
+      - feature/shwm-ble-usb-installer
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Unit-test decoder and generate YAML
+        run: |
+          cd tools/shwm-ble-usb-scanner
+          node --test tests/*.test.mjs
+      - name: Install toolchain
+        run: python -m pip install --upgrade platformio esptool
+      - name: Build scanner firmware from pinned supported board catalog
+        run: |
+          set -euo pipefail
+          cd tools/shwm-ble-usb-scanner
+          node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';if(SCANNER_BOARDS.length!==22)process.exit(1);console.log(SCANNER_BOARDS.length+' targets')"
+          for env in $(node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';console.log(SCANNER_BOARDS.map(b=>b.id).join(' '))"); do
+            echo "=== Compiling $env ==="
+            pio run -d scanner -e "$env"
+          done
+      - name: Merge board-specific images and generate explicit install manifests
+        run: |
+          set -euo pipefail
+          cd tools/shwm-ble-usb-scanner
+          mkdir -p site/firmware/bin site/firmware/manifests
+          for env in $(node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';console.log(SCANNER_BOARDS.map(b=>b.id).join(' '))"); do
+            p="scanner/.pio/build/$env"
+            dest="site/firmware/bin/$env.bin"
+            board_meta=$(BOARD_ID="$env" node --input-type=module -e "import{getBoard}from './site/core.mjs';const b=getBoard(process.env.BOARD_ID);if(!b||!b.scanner)process.exit(2);console.log(b.chipFamily+' '+b.flashMB)")
+            read -r family flash_mb <<< "$board_meta"
+            case "$family" in
+              ESP32) chip=esp32; offset=0x1000;;
+              ESP32-C3) chip=esp32c3; offset=0x0;;
+              ESP32-S3) chip=esp32s3; offset=0x0;;
+              *) echo "Unsupported ESP chip family $family"; exit 1;;
+            esac
+            test -s "$p/bootloader.bin" && test -s "$p/partitions.bin" && test -s "$p/firmware.bin"
+            boot_app="$p/boot_app0.bin"
+            if [ ! -s "$boot_app" ]; then
+              boot_app="$(find "$HOME/.platformio/packages" -name boot_app0.bin -print -quit)"
+            fi
+            test -s "$boot_app" || { echo "Missing boot_app0.bin"; exit 1; }
+            python -m esptool --chip "$chip" merge-bin -o "$dest" --flash-mode dio --flash-freq 40m --flash-size "${flash_mb}MB" \
+              "$offset" "$p/bootloader.bin" 0x8000 "$p/partitions.bin" \
+              0xe000 "$boot_app" 0x10000 "$p/firmware.bin"
+            test -s "$dest"
+            BOARD="$env" CHIP_FAMILY="$family" python - <<'PY'
+          import json, os, pathlib
+          board, family = os.environ["BOARD"], os.environ["CHIP_FAMILY"]
+          manifest={"name":"SHWM BLE USB Scanner - "+board,
+                    "version":"0.4.0", "new_install_prompt_erase":True,
+                    "builds":[{"chipFamily":family,"parts":[{"path":"../bin/"+board+".bin","offset":0}]}]}
+          path=pathlib.Path("site/firmware/manifests")/(board+".json")
+          path.write_text(json.dumps(manifest,indent=2)+"\n", encoding="utf-8")
+          PY
+          done
+          EXPECTED=$(node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';process.stdout.write(String(SCANNER_BOARDS.length))")
+          test "$(find site/firmware/manifests -maxdepth 1 -name '*.json' | wc -l)" -eq "$EXPECTED"
+          test "$(find site/firmware/bin -maxdepth 1 -name '*.bin' | wc -l)" -eq "$EXPECTED"
+          sha256sum site/firmware/bin/*.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shwm-ble-scanner-expanded-board-binaries
+          path: tools/shwm-ble-usb-scanner/site/firmware
+          if-no-files-found: error
+      - uses: actions/checkout@v4
+        with:
+          repository: theengs/decoder
+          ref: v2.4.5
+          path: third_party/theengs
+          submodules: recursive
+          persist-credentials: false
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: '3.1.61'
+          actions-cache-folder: emsdk-cache
+      - name: Compile upstream Theengs Decoder WebAssembly from source
+        run: |
+          set -euo pipefail
+          cd third_party/theengs/nodejs/theengs-decoder
+          npm run build:web
+          cd ../../../..
+          dest=tools/shwm-ble-usb-scanner/site/vendor
+          mkdir -p "$dest"
+          cp third_party/theengs/docs/.vitepress/public/wasm/theengs_decoder_wasm.mjs "$dest/"
+          test -s "$dest/theengs_decoder_wasm.mjs"
+          sha256sum "$dest/theengs_decoder_wasm.mjs"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shwm-ble-scanner-complete-web-app
+          path: tools/shwm-ble-usb-scanner/site
+          if-no-files-found: error
+
+  publish-pages-preview:
+    name: Stage isolated GitHub Pages preview
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/shwm-ble-usb-installer' && github.event_name == 'push'
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+          path: pages
+      - name: Retrieve CI-tested web application
+        uses: actions/download-artifact@v4
+        with:
+          name: shwm-ble-scanner-complete-web-app
+          path: preview-site
+      - name: Verify expanded firmware library and Theengs engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s preview-site/index.html
+          test -s preview-site/app.mjs
+          test -s preview-site/core.mjs
+          test -s preview-site/vendor/theengs_decoder_wasm.mjs
+          test "$(find preview-site/firmware/bin -maxdepth 1 -name '*.bin' -type f | wc -l)" -eq 22
+          test "$(find preview-site/firmware/manifests -maxdepth 1 -name '*.json' -type f | wc -l)" -eq 22
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('preview-site/firmware')
+          for m in root.joinpath('manifests').glob('*.json'):
+              data=json.loads(m.read_text())
+              assert len(data['builds'])==1
+              for part in data['builds'][0]['parts']:
+                  image=(m.parent / part['path']).resolve()
+                  assert image.is_relative_to(root.resolve())
+                  assert image.is_file() and image.stat().st_size>100000
+          print('Expanded board manifests passed validation.')
+          PY
+      - name: Stage preview branch without altering main
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="gh-pages-shwm-ble-preview"
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "$target" >/dev/null; then
+            git fetch origin "$target"
+            git checkout -B "$target" FETCH_HEAD
+          else
+            git checkout --orphan "$target"
+            git rm -rf --ignore-unmatch . >/dev/null || true
+          fi
+          rsync -a --delete --exclude=.git/ "$GITHUB_WORKSPACE/preview-site/" .
+          touch .nojekyll
+          printf 'User-agent: *\nDisallow: /\n' > robots.txt
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "preview(shwm-ble): tested static app $GITHUB_SHA"
+            git push origin "HEAD:refs/heads/$target"
+          else
+            echo "Preview branch already matches CI-tested assets"
+          fi
+          echo "Manual GitHub setting: Pages > Deploy from a branch > gh-pages-shwm-ble-preview / (root)."
+
+  deploy-pages-when-configured:
+    name: Deploy preview after owner enables GitHub Pages Actions
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/shwm-ble-usb-installer' && github.event_name == 'push'
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check whether GitHub Pages Actions source is enabled
+        id: pages-ready
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          code=$(curl --silent --show-error --output pages.json --write-out '%{http_code}' \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/pages")
+          if [ "$code" != 200 ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages not configured: go to Settings > Pages > Source: GitHub Actions."
+            exit 0
+          fi
+          if python - <<'PY'
+          import json
+          conf=json.load(open('pages.json'))
+          print('GitHub Pages existing site:',conf.get('html_url','(not set)'))
+          assert conf.get('build_type') == 'workflow', 'Existing Pages is NOT GitHub Actions-based; do not overwrite it.'
+          PY
+          then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Pages source must be GitHub Actions; no deployment performed."
+          fi
+      - name: Download tested site
+        if: steps.pages-ready.outputs.ready == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: shwm-ble-scanner-complete-web-app
+          path: preview-site
+      - name: Verify Pages asset layout
+        if: steps.pages-ready.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s preview-site/index.html
+          test -s preview-site/vendor/theengs_decoder_wasm.mjs
+          test "$(find preview-site/firmware/bin -name '*.bin' -type f | wc -l)" -eq 22
+          test "$(find preview-site/firmware/manifests -name '*.json' -type f | wc -l)" -eq 22
+          touch preview-site/.nojekyll
+          printf 'User-agent: *\nDisallow: /\n' > preview-site/robots.txt
+      - name: Package official Pages deployment
+        if: steps.pages-ready.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: preview-site
+      - name: Deploy GitHub Pages preview
+        if: steps.pages-ready.outputs.ready == 'true'
+        uses: actions/deploy-pages@v4
+        id: deployment

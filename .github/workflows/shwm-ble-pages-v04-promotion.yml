@@ -1,0 +1,58 @@
+name: SHWM BLE v0.4 - promote CI-verified Pages artifact
+on:
+  push:
+    branches:
+      - feature/shwm-ble-usb-installer
+    paths:
+      - .github/workflows/shwm-ble-pages-v04-promotion.yml
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+jobs:
+  deploy-ci-proven-22-board-generator:
+    name: Deploy compiled and verified BLE v0.4 to Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Download prior successful CI web-app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: shwm-ble-scanner-complete-web-app
+          run-id: 39561461015
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: preview-site
+      - name: Verify 22 model-specific scanner images, manifests and Theengs
+        run: |
+          set -euo pipefail
+          test -s preview-site/index.html
+          test -s preview-site/app.mjs
+          test -s preview-site/core.mjs
+          test -s preview-site/vendor/theengs_decoder_wasm.mjs
+          test "$(find preview-site/firmware/bin -maxdepth 1 -type f -name '*.bin' | wc -l)" -eq 22
+          test "$(find preview-site/firmware/manifests -maxdepth 1 -type f -name '*.json' | wc -l)" -eq 22
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("preview-site/firmware")
+          for manifest in root.joinpath("manifests").glob("*.json"):
+              data=json.loads(manifest.read_text())
+              assert len(data["builds"])==1
+              assert len(data["builds"][0]["parts"])==1
+              part=data["builds"][0]["parts"][0]
+              candidate=(manifest.parent / part["path"]).resolve()
+              assert candidate.is_relative_to(root.resolve())
+              assert candidate.exists() and candidate.stat().st_size > 100000
+          print("22 scanner firmwares + Theengs WASM verified.")
+          PY
+          touch preview-site/.nojekyll
+          printf 'User-agent: *\nDisallow: /\n' > preview-site/robots.txt
+      - name: Package verified GitHub Pages site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: preview-site
+      - name: Publish verified v0.4
+        id: deploy
+        uses: actions/deploy-pages@v4

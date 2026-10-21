@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explore BLE devices — SHWM ESP32 Scanner &amp; ESPHome Generator</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif}body{background:#0c1320;color:#f0f4fa;max-width:1020px;padding:20px;margin:auto;line-height:1.55}h1{font-size:clamp(1.45rem,3vw,2.1rem)}h2{margin:0 0 12px;font-size:1.2rem}section{border:1px solid #344159;border-radius:14px;padding:18px;margin:16px 0;background:#111d2d}p{margin:8px 0}small,.muted{color:#bac9d8}button,select{background:#1e65bd;border:0;color:white;border-radius:7px;padding:10px 14px;cursor:pointer;font:inherit}button:hover:not(:disabled){background:#2d7ad8}button:disabled{opacity:.5;cursor:not-allowed}input[type=search]{background:#0b1525;color:#daefff;border:1px solid #35465c;border-radius:8px;padding:10px;font:inherit}textarea,pre{width:100%;box-sizing:border-box;background:#0b1525;color:#daefff;font:12px/1.5 ui-monospace,monospace;padding:12px;border:1px solid #35465c;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}textarea{min-height:110px}pre{max-height:260px;overflow:auto;min-height:70px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid #354052;text-align:left;white-space:nowrap}td button{font-size:.85rem}#status{padding:10px;border-radius:7px;background:#2a394c}#status[data-kind=ok]{background:#164734}#status[data-kind=warn]{background:#674522}.warning{border-left:4px solid #f7b84c;padding:12px;background:#3a2e20}.notice{border-left:4px solid #51bada;padding:12px;background:#182e40}.flow{font-weight:600;color:#9ecdfb}a{color:#98cfff}#install-wrapper{padding:12px;border:1px dashed #5e7a90;border-radius:8px;margin-top:12px}#install-wrapper[hidden]{display:none}@media(max-width:700px){.grid{grid-template-columns:1fr}}.sr-only{position:absolute;left:-10000px}
+.step-note{padding:12px;border-left:4px solid #51bada;background:#182e40;margin:12px 0}.result-text{font-size:1.1rem;font-weight:650;border-radius:8px;padding:12px;background:#163b36}.action-row{display:flex;flex-wrap:wrap;gap:8px}.action-row button{margin:5px 0}details{margin:12px 0}details summary{cursor:pointer;font-weight:600}#yaml-note{background:#182e40;border-radius:8px;padding:12px}#yaml-note[data-kind=warn]{background:#44351b}#yaml{min-height:295px}#board-search-status{display:block;font-size:.85rem;margin:5px 0}
+</style>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script></head>
+<body>
+<h1>Explore cheap Bluetooth devices <small>SHWM BLE Scanner &amp; ESPHome Generator v0.4</small></h1>
+<p>Discover advertisements from affordable Bluetooth scales, thermometers and other BLE gadgets — no vendor app or cloud account required for supported broadcasts. <strong>Recognizing a device is not the same as having ESPHome YAML:</strong> our LC026 scale is currently the only profile with independently verified YAML generation.</p>
+<p class="warning"><strong>Before flashing:</strong> the initial BLE Scanner replaces any firmware already on your ESP32. Back up an existing ESPHome configuration first. Use a spare board when possible. Only click Install on the correct USB device.</p>
+<section id="choose-board"><h2>Step 1 · Choose your ESP32 (one time)</h2>
+<p>Select the board you own, e.g. <strong>ESP32 DevKit / WROOM-32</strong>. This same selection is used for the temporary scanner AND the final ESPHome YAML.</p>
+<p><label for="board-search">Find your model (optional):</label><br><input id="board-search" type="search" placeholder="WROOM, XIAO, ESP32-S3…" autocomplete="off" style="max-width:100%;width:400px"><small id="board-search-status">Type to search.</small></p>
+<p><label for="board"><strong>My ESP32 board:</strong></label><br><select id="board" aria-label="ESP32 model used for scanner and final ESPHome YAML"></select></p>
+<p class="muted"><small><span id="board-catalog-count">…</span> ESP32 models listed; <span id="board-scan-count">…</span> have ready-to-install scanners.</small></p>
+<p class="notice" id="board-note" role="status">Choose a board to continue.</p>
+<p class="muted" id="board-warning">Check your ESP32 model and USB port.</p>
+<p class="notice" id="firmware-notice" role="status">Checking BLE Scanner firmware…</p>
+<div id="install-wrapper" hidden><esp-web-install-button id="flash-tool" manifest="./firmware/manifests/esp32dev.json"><button type="button" slot="activate">Install temporary BLE Scanner</button><span slot="unsupported">Use desktop Chrome or Edge with a USB data cable.</span></esp-web-install-button></div>
+<p class="step-note"><strong>Warning:</strong> installing the scanner replaces any firmware already on your ESP32. Back up first or use a spare board. If your model is “YAML preview only”, try the LC026 example or import a compatible scan rather than attempting an unsupported installation.</p>
+</section>
+<section id="read-bluetooth"><h2>Step 2 · Get a Bluetooth reading</h2>
+<p><strong>Have a scanner?</strong> Click <strong>Connect ESP32 and scan</strong>, then wake your Bluetooth gadget (step on the scale to trigger it). <strong>No hardware?</strong> Click <strong>Try LC026 example</strong> to test the whole generator safely.</p>
+<div class="action-row"><button type="button" id="connect">Connect ESP32 and scan</button><button type="button" id="demo">Try LC026 example</button></div>
+<p id="status" role="status">Ready. Connect the scanner or try the example.</p>
+<p class="step-note"><strong>Next:</strong> click <strong>Select</strong> next to a device below. For a verified LC026 example, we will do this automatically.</p>
+<div class="table-wrap"><table><thead><tr><th>Choose</th><th>Device name</th><th>Signal</th><th>Reading</th><th>Packets</th><th>Last seen</th></tr></thead><tbody id="devices"></tbody></table></div>
+<details><summary>No USB? Paste previously captured scanner data</summary><p>Copy JSON lines from the <strong>SHWM USB Scanner</strong> serial output and paste them below (one JSON object per line). Then click <strong>Read pasted data</strong>. You do <strong>not</strong> copy RAW into Decoded — both are automatically displayed in Step 3.</p><textarea id="capture" aria-label="Paste SHWM scanner JSON lines"></textarea><button type="button" id="import">Read pasted data</button></details>
+<details><summary>Advanced: scanner status and filters</summary><p><small>Decoder engine: <span id="engine">Loading…</span></small></p><p class="muted">Received <span id="rx-count">0</span> packets; recognized devices: <span id="known-count">0</span>; <span id="last-packet">waiting for BLE advertisements</span>.</p><p><label><input id="recognized-only" type="checkbox"> Hide unrecognized devices</label></p></details>
+</section>
+<section id="generate-yaml"><h2>Step 3 · See the result and copy YAML</h2>
+<p id="selected">No device selected. Try Step 2 — the LC026 example is selected automatically.</p>
+<p id="reading" class="result-text" role="status">Your decoded reading will appear here.</p>
+<p id="yaml-note" role="status" data-kind="warn">YAML requires a verified, stable LC026 scale reading. Other recognized devices do not yet have validated YAML templates.</p>
+<details><summary>Advanced: original data (RAW) and decoded details</summary><p><strong>RAW</strong> is the original Bluetooth message. <strong>Decoded</strong> is what the decoder understood. Both are read-only results; you do not paste anything between them.</p><div class="grid"><div><strong>Original message (RAW)</strong><pre id="raw">No device selected</pre></div><div><strong>Decoder details</strong><pre id="decoded">No device selected</pre></div></div></details>
+<p class="step-note">Your YAML will target <strong id="board-confirm">the ESP32 selected in Step 1</strong>. <a href="#choose-board">Change board ↑</a></p>
+<button type="button" id="make-yaml" disabled>Generate ESPHome YAML</button>
+<p><label for="yaml"><strong>Generated YAML — copy this to ESPHome:</strong></label></p>
+<textarea id="yaml" aria-label="Generated ESPHome YAML" readonly placeholder="Select a verified device and click Generate ESPHome YAML. Your code will appear here."></textarea>
+<div class="action-row"><button type="button" id="copy" disabled>Copy YAML</button><button type="button" id="download" disabled>Download YAML</button></div>
+<p class="muted">Only the independently validated LC026 scale profile has a YAML generator today. Results recognized by Theengs do not automatically become ESPHome sensor drivers.</p>
+</section>
+<section id="install-esphome"><h2>Step 4 · Paste YAML into ESPHome and install</h2>
+<ol><li>Click <strong>Copy YAML</strong> above and open <a href="https://esphome.io/install/">ESPHome Device Builder</a>.</li>
+<li>Create/edit your ESP32 device, open its YAML editor, and <strong>paste the generated YAML</strong> instead of the starting example. Match the board selected in Step 1.</li>
+<li>Set your Wi-Fi, API and OTA values in <code>secrets.yaml</code>, click <strong>Validate</strong>, then <strong>Install → Manual download</strong> to compile the final firmware.</li>
+<li>Disconnect the live scanner. Flash the <em>compiled firmware</em> using ESPHome's supported USB method or <a href="https://web.esphome.io/">ESPHome Web</a>. Add the ESPHome device in Home Assistant.</li></ol>
+<p class="warning"><strong>Remember:</strong> installing ESPHome replaces the temporary scanner. ESPHome Web does not compile YAML; compilation happens in Device Builder. Choosing an ESP32 board alone cannot generate code for unknown Bluetooth devices.</p>
+</section>
+<footer class="muted"><small>GPL-3.0-or-later · Decoder: Theengs (GPL-3.0), original sources credited in THIRD_PARTY.md · No cloud uploads · No original device app needed · Bluetooth LE advertising only; GATT devices require future support.</small></footer>
+<script type="module" src="./app.mjs"></script>
+</body></html>
