@@ -20,35 +20,61 @@ jobs:
           node --test tests/*.test.mjs
       - name: Install toolchain
         run: python -m pip install --upgrade platformio esptool
-      - name: Build ESP32 DevKit and Seeed XIAO ESP32-C3
+      - name: Build scanner firmware for six ESP32 boards
         run: |
+          set -euo pipefail
           cd tools/shwm-ble-usb-scanner/scanner
-          pio run -e esp32dev
-          pio run -e seeed_xiao_esp32c3
-      - name: Assemble ESP Web Tools images
+          for env in esp32dev nodemcu-32s esp32-c3-devkitm-1 seeed_xiao_esp32c3 esp32-s3-devkitc-1 seeed_xiao_esp32s3; do
+            echo "=== Compiling $env ==="
+            pio run -e "$env"
+          done
+      - name: Assemble six board-specific firmware images and safe manifests
         run: |
           set -euo pipefail
           cd tools/shwm-ble-usb-scanner
-          mkdir -p site/firmware/bin
-          for env in esp32dev seeed_xiao_esp32c3; do
+          mkdir -p site/firmware/bin site/firmware/manifests
+          for env in esp32dev nodemcu-32s esp32-c3-devkitm-1 seeed_xiao_esp32c3 esp32-s3-devkitc-1 seeed_xiao_esp32s3; do
             p="scanner/.pio/build/$env"
             dest="site/firmware/bin/$env.bin"
-            if [ "$env" = esp32dev ]; then chip=esp32; offset=0x1000; else chip=esp32c3; offset=0x0; fi
+            case "$env" in
+              esp32dev|nodemcu-32s) chip=esp32; offset=0x1000; size=4MB; family=ESP32;;
+              esp32-c3-devkitm-1|seeed_xiao_esp32c3) chip=esp32c3; offset=0x0; size=4MB; family=ESP32-C3;;
+              esp32-s3-devkitc-1) chip=esp32s3; offset=0x0; size=8MB; family=ESP32-S3;;
+              seeed_xiao_esp32s3) chip=esp32s3; offset=0x0; size=8MB; family=ESP32-S3;;
+              *) echo "Unexpected board $env"; exit 1;;
+            esac
             test -s "$p/bootloader.bin" && test -s "$p/partitions.bin" && test -s "$p/firmware.bin"
             boot_app="$p/boot_app0.bin"
             if [ ! -s "$boot_app" ]; then
               boot_app="$(find "$HOME/.platformio/packages" -name boot_app0.bin -print -quit)"
             fi
-            test -s "$boot_app" || { echo "Missing boot_app0.bin from PlatformIO package"; exit 1; }
-            python -m esptool --chip "$chip" merge-bin -o "$dest" --flash-mode dio --flash-freq 40m --flash-size 4MB \
+            test -s "$boot_app" || { echo "Missing boot_app0.bin"; exit 1; }
+            python -m esptool --chip "$chip" merge-bin -o "$dest" --flash-mode dio --flash-freq 40m --flash-size "$size" \
               "$offset" "$p/bootloader.bin" 0x8000 "$p/partitions.bin" \
               0xe000 "$boot_app" 0x10000 "$p/firmware.bin"
             test -s "$dest"
+            BOARD="$env" CHIP_FAMILY="$family" python - <<'PY'
+          import json, os, pathlib
+          board, family = os.environ["BOARD"], os.environ["CHIP_FAMILY"]
+          manifest = {
+            "name": "SHWM BLE USB Scanner - "+board,
+            "version": "0.3.0",
+            "new_install_prompt_erase": True,
+            "builds": [{
+              "chipFamily": family,
+              "parts": [{"path": "../bin/"+board+".bin", "offset": 0}]
+            }]
+          }
+          path=pathlib.Path("site/firmware/manifests")/(board+".json")
+          path.write_text(json.dumps(manifest, indent=2)+"\n",encoding="utf-8")
+          PY
           done
+          test "$(find site/firmware/manifests -name '*.json' | wc -l)" -eq 6
+          test "$(find site/firmware/bin -name '*.bin' | wc -l)" -eq 6
           sha256sum site/firmware/bin/*.bin
       - uses: actions/upload-artifact@v4
         with:
-          name: shwm-ble-scanner-merged-binaries
+          name: shwm-ble-scanner-six-board-binaries
           path: tools/shwm-ble-usb-scanner/site/firmware
           if-no-files-found: error
       - uses: actions/checkout@v4
