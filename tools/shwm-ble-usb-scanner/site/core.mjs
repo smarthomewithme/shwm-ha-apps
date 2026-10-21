@@ -1,4 +1,30 @@
 /* SHWM BLE Decoder, shared pure parsing/decoder functions — GPL-3.0-or-later */
+export const BOARD_CATALOG = Object.freeze([
+  { id:'esp32dev', label:'ESP32 DevKit / WROOM-32 (classic)', chipFamily:'ESP32', usb:'USB-to-UART bridge', flashMB:4 },
+  { id:'nodemcu-32s', label:'NodeMCU-32S', chipFamily:'ESP32', usb:'USB-to-UART bridge', flashMB:4 },
+  { id:'esp32-c3-devkitm-1', label:'ESP32-C3 DevKitM-1', chipFamily:'ESP32-C3', usb:'USB-to-UART bridge', flashMB:4 },
+  { id:'seeed_xiao_esp32c3', label:'Seeed XIAO ESP32-C3', chipFamily:'ESP32-C3', usb:'native USB CDC', flashMB:4 },
+  { id:'esp32-s3-devkitc-1', label:'ESP32-S3 DevKitC-1', chipFamily:'ESP32-S3', usb:'native USB connector', flashMB:4 },
+  { id:'seeed_xiao_esp32s3', label:'Seeed XIAO ESP32-S3', chipFamily:'ESP32-S3', usb:'native USB CDC', flashMB:8 }
+]);
+export const getBoard = id => BOARD_CATALOG.find(x => x.id === id) || null;
+
+export function summarizeDecoded(theengs, lc) {
+  if (lc) return lc.weight_kg.toFixed(2)+' kg'+(lc.stable?' · stable':' · measuring');
+  if (!theengs || typeof theengs !== 'object') return 'Unrecognized RAW';
+  const known = [
+    ['tempc','°C'],['tempf','°F'],['hum','% RH'],['batt','% battery'],
+    ['pres','hPa'],['lux','lx'],['accx','acc X'],['accy','acc Y'],
+    ['weight','kg'],['weightkg','kg'],['voltage','V'],['volt','V'],['co2','ppm'],['pm25','µg/m³']
+  ];
+  const measurements=[];
+  for (const [field,unit] of known) {
+    const val=theengs[field];if(typeof val==='number' && Number.isFinite(val)) measurements.push(field+': '+val+' '+unit);
+  }
+  const model=String(theengs.model||theengs.model_id||theengs.brand||'Theengs').slice(0,80);
+  return (model+(measurements.length?' · '+measurements.slice(0,4).join(' · '):' · recognized')).slice(0,260);
+}
+
 export const MAC_RE = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i;
 export function normalizeAdvertisement(value) {
   if (!value || typeof value !== 'object' || value.type === 'hello') return null;
@@ -52,7 +78,7 @@ export function toTheengs(frame) {
   };
 }
 export function espHomeScaleYAML(mac, board='esp32dev') {
-  if (!MAC_RE.test(mac) || !['esp32dev','seeed_xiao_esp32c3'].includes(board)) throw new Error('Unsupported MAC/board');
+  if (!MAC_RE.test(mac) || !getBoard(board)) throw new Error('Unsupported MAC/board');
   return `# SHWM verified LC026 only. Requires ESPHome with BLE tracker support.
 # This firmware replaces the temporary scanner on this ESP32.
 esphome:
