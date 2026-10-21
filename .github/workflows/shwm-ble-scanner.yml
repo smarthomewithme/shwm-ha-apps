@@ -226,8 +226,8 @@ jobs:
           set -euo pipefail
           test -s preview-site/index.html
           test -s preview-site/vendor/theengs_decoder_wasm.mjs
-          test "$(find preview-site/firmware/bin -name '*.bin' -type f | wc -l)" -eq 6
-          test "$(find preview-site/firmware/manifests -name '*.json' -type f | wc -l)" -eq 6
+          test "$(find preview-site/firmware/bin -name '*.bin' -type f | wc -l)" -eq 22
+          test "$(find preview-site/firmware/manifests -name '*.json' -type f | wc -l)" -eq 22
           touch preview-site/.nojekyll
           printf 'User-agent: *\nDisallow: /\n' > preview-site/robots.txt
       - name: Package official Pages deployment
