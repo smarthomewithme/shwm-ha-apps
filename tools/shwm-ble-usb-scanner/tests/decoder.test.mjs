@@ -20,7 +20,7 @@ test('six supported board families are BLE-capable ESP32 targets',()=>{
 test('every supported board generates its own ESPHome YAML header',()=>{
   for (const board of BOARD_CATALOG){
     const y=espHomeScaleYAML(frame.mac,board.id);
-    assert.match(y,new RegExp('board: '+board.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+    assert.ok(y.includes('board: '+board.id), 'missing board '+board.id);
   }
 });
 test('known Theengs readings show real measurements and units',()=>{
