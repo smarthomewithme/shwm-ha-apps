@@ -20,28 +20,30 @@ jobs:
           node --test tests/*.test.mjs
       - name: Install toolchain
         run: python -m pip install --upgrade platformio esptool
-      - name: Build scanner firmware for six ESP32 boards
+      - name: Build scanner firmware from pinned supported board catalog
         run: |
           set -euo pipefail
-          cd tools/shwm-ble-usb-scanner/scanner
-          for env in esp32dev nodemcu-32s esp32-c3-devkitm-1 seeed_xiao_esp32c3 esp32-s3-devkitc-1 seeed_xiao_esp32s3; do
+          cd tools/shwm-ble-usb-scanner
+          node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';if(SCANNER_BOARDS.length!==23)process.exit(1);console.log(SCANNER_BOARDS.length+' targets')"
+          for env in $(node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';console.log(SCANNER_BOARDS.map(b=>b.id).join(' '))"); do
             echo "=== Compiling $env ==="
-            pio run -e "$env"
+            pio run -d scanner -e "$env"
           done
-      - name: Assemble six board-specific firmware images and safe manifests
+      - name: Merge board-specific images and generate explicit install manifests
         run: |
           set -euo pipefail
           cd tools/shwm-ble-usb-scanner
           mkdir -p site/firmware/bin site/firmware/manifests
-          for env in esp32dev nodemcu-32s esp32-c3-devkitm-1 seeed_xiao_esp32c3 esp32-s3-devkitc-1 seeed_xiao_esp32s3; do
+          for env in $(node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';console.log(SCANNER_BOARDS.map(b=>b.id).join(' '))"); do
             p="scanner/.pio/build/$env"
             dest="site/firmware/bin/$env.bin"
-            case "$env" in
-              esp32dev|nodemcu-32s) chip=esp32; offset=0x1000; size=4MB; family=ESP32;;
-              esp32-c3-devkitm-1|seeed_xiao_esp32c3) chip=esp32c3; offset=0x0; size=4MB; family=ESP32-C3;;
-              esp32-s3-devkitc-1) chip=esp32s3; offset=0x0; size=8MB; family=ESP32-S3;;
-              seeed_xiao_esp32s3) chip=esp32s3; offset=0x0; size=8MB; family=ESP32-S3;;
-              *) echo "Unexpected board $env"; exit 1;;
+            board_meta=$(BOARD_ID="$env" node --input-type=module -e "import{getBoard}from './site/core.mjs';const b=getBoard(process.env.BOARD_ID);if(!b||!b.scanner)process.exit(2);console.log(b.chipFamily+' '+b.flashMB)")
+            read -r family flash_mb <<< "$board_meta"
+            case "$family" in
+              ESP32) chip=esp32; offset=0x1000;;
+              ESP32-C3) chip=esp32c3; offset=0x0;;
+              ESP32-S3) chip=esp32s3; offset=0x0;;
+              *) echo "Unsupported ESP chip family $family"; exit 1;;
             esac
             test -s "$p/bootloader.bin" && test -s "$p/partitions.bin" && test -s "$p/firmware.bin"
             boot_app="$p/boot_app0.bin"
@@ -49,32 +51,27 @@ jobs:
               boot_app="$(find "$HOME/.platformio/packages" -name boot_app0.bin -print -quit)"
             fi
             test -s "$boot_app" || { echo "Missing boot_app0.bin"; exit 1; }
-            python -m esptool --chip "$chip" merge-bin -o "$dest" --flash-mode dio --flash-freq 40m --flash-size "$size" \
+            python -m esptool --chip "$chip" merge-bin -o "$dest" --flash-mode dio --flash-freq 40m --flash-size "${flash_mb}MB" \
               "$offset" "$p/bootloader.bin" 0x8000 "$p/partitions.bin" \
               0xe000 "$boot_app" 0x10000 "$p/firmware.bin"
             test -s "$dest"
             BOARD="$env" CHIP_FAMILY="$family" python - <<'PY'
           import json, os, pathlib
           board, family = os.environ["BOARD"], os.environ["CHIP_FAMILY"]
-          manifest = {
-            "name": "SHWM BLE USB Scanner - "+board,
-            "version": "0.3.0",
-            "new_install_prompt_erase": True,
-            "builds": [{
-              "chipFamily": family,
-              "parts": [{"path": "../bin/"+board+".bin", "offset": 0}]
-            }]
-          }
+          manifest={"name":"SHWM BLE USB Scanner - "+board,
+                    "version":"0.4.0", "new_install_prompt_erase":True,
+                    "builds":[{"chipFamily":family,"parts":[{"path":"../bin/"+board+".bin","offset":0}]}]}
           path=pathlib.Path("site/firmware/manifests")/(board+".json")
-          path.write_text(json.dumps(manifest, indent=2)+"\n",encoding="utf-8")
+          path.write_text(json.dumps(manifest,indent=2)+"\n", encoding="utf-8")
           PY
           done
-          test "$(find site/firmware/manifests -name '*.json' | wc -l)" -eq 6
-          test "$(find site/firmware/bin -name '*.bin' | wc -l)" -eq 6
+          EXPECTED=$(node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';process.stdout.write(String(SCANNER_BOARDS.length))")
+          test "$(find site/firmware/manifests -maxdepth 1 -name '*.json' | wc -l)" -eq "$EXPECTED"
+          test "$(find site/firmware/bin -maxdepth 1 -name '*.bin' | wc -l)" -eq "$EXPECTED"
           sha256sum site/firmware/bin/*.bin
       - uses: actions/upload-artifact@v4
         with:
-          name: shwm-ble-scanner-six-board-binaries
+          name: shwm-ble-scanner-expanded-board-binaries
           path: tools/shwm-ble-usb-scanner/site/firmware
           if-no-files-found: error
       - uses: actions/checkout@v4
@@ -125,7 +122,7 @@ jobs:
         with:
           name: shwm-ble-scanner-complete-web-app
           path: preview-site
-      - name: Verify six firmware images and Theengs engine
+      - name: Verify expanded firmware library and Theengs engine
         shell: bash
         run: |
           set -euo pipefail
@@ -133,8 +130,8 @@ jobs:
           test -s preview-site/app.mjs
           test -s preview-site/core.mjs
           test -s preview-site/vendor/theengs_decoder_wasm.mjs
-          test "$(find preview-site/firmware/bin -maxdepth 1 -name '*.bin' -type f | wc -l)" -eq 6
-          test "$(find preview-site/firmware/manifests -maxdepth 1 -name '*.json' -type f | wc -l)" -eq 6
+          test "$(find preview-site/firmware/bin -maxdepth 1 -name '*.bin' -type f | wc -l)" -eq 23
+          test "$(find preview-site/firmware/manifests -maxdepth 1 -name '*.json' -type f | wc -l)" -eq 23
           python - <<'PY'
           import json, pathlib
           root=pathlib.Path('preview-site/firmware')
@@ -145,7 +142,7 @@ jobs:
                   image=(m.parent / part['path']).resolve()
                   assert image.is_relative_to(root.resolve())
                   assert image.is_file() and image.stat().st_size>100000
-          print('Six board manifests passed validation.')
+          print('Expanded board manifests passed validation.')
           PY
       - name: Stage preview branch without altering main
         shell: bash

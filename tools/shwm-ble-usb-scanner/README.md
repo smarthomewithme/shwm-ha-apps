@@ -58,3 +58,13 @@ Repository owner selected **Settings → Pages → Build and deployment → Sour
 The isolated CI workflow at `.github/workflows/shwm-ble-scanner.yml` builds all **six** ESP32 board targets, compiles the pinned Theengs WASM, stages a fallback snapshot to `gh-pages-shwm-ble-preview`, and attempts official GitHub Pages deployment **only when the configured Pages source is GitHub Actions**. The preview is a public experimental tool, not hardware-verified. Do not embed it in the published WordPress article until the USB flash / receive path is verified with a spare ESP32.
 
 On successful deployment, confirm the URL from the **Actions deploy job output** and verify real HTTPS loads. Successful CI compilation alone does not prove GitHub Pages was deployed.
+
+
+## Expanded BLE board database — v0.4 (pending CI/hardware validation)
+
+- Catalog: **45 ESP32 boards** with pinned identifiers from PlatformIO espressif32 6.9.0.
+- Compiled scanner targets: **23 models**, split between original ESP32, ESP32-C3 and ESP32-S3. Each scanner image is built separately, merged with board-specific flash sizes and served with an exact model manifest.
+- Other **22 catalog-only boards** are deliberately marked **YAML preview only**; the USB scanner installer will NOT claim support. The generator's ESPHome YAML must be checked in ESPHome Device Builder; board ID presence does not guarantee firmware validation.
+- ESP32-S2 excluded entirely (no Bluetooth radio). ESP32-C6 and newer chips are deferred until compatible NimBLE scanner builds and Web Tools chip support are verified with the chosen toolchain.
+- New searchable board selector filters manufacturer/chip family/model without removing the current target choice.
+- Flashing overwrites a board's existing firmware; use a spare ESP32. No physical testing of the new models has been performed by this code-only workflow.

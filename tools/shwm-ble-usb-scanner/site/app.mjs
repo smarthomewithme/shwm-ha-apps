@@ -1,4 +1,4 @@
-import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML, BOARD_CATALOG, getBoard, summarizeDecoded } from './core.mjs';
+import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML, BOARD_CATALOG, getBoard, SCANNER_BOARDS, summarizeDecoded } from './core.mjs';
 
 const $ = selector => document.querySelector(selector);
 const byMac = new Map();
@@ -119,18 +119,34 @@ $('#download').addEventListener('click',()=>{const text=$('#yaml').value;if(!tex
 });
 // Board choices are intentionally restricted to models compiled by the isolated CI build.
 // Separate manifests prevent ESP Web Tools silently picking the wrong board within one chip family.
+function fillFinalBoardOptions(query){
+ const sel=$('#board'), previous=sel.value||$('#install-board').value||'esp32dev';
+ const q=String(query||'').trim().toLowerCase();
+ const matches=BOARD_CATALOG.filter(b=>!q||b.id.toLowerCase().includes(q)||b.label.toLowerCase().includes(q)||b.chipFamily.toLowerCase().includes(q));
+ // Keep the previously selected target visible even when the filter excludes it.
+ const visible=matches.some(b=>b.id===previous)?matches:[...matches,...BOARD_CATALOG.filter(b=>b.id===previous)];
+ const groups=['ESP32','ESP32-C3','ESP32-S3'];
+ sel.innerHTML=groups.map(f=>{
+  const list=visible.filter(b=>b.chipFamily===f);
+  return list.length?`<optgroup label="${f} — ${list.length} matching">${list.map(b=>`<option value="${b.id}">${escape(b.label)} ${b.scanner?'[scanner + YAML]':'[YAML preview only]'}</option>`).join('')}</optgroup>`:'';
+ }).join('');
+ if(visible.length)sel.value=previous;
+ $('#board-catalog-count').textContent=String(BOARD_CATALOG.length);
+ $('#board-scan-count').textContent=String(SCANNER_BOARDS.length);
+ $('#board-search-count').textContent=String(matches.length);
+}
 function initializeBoardSelectors(){
- const options=BOARD_CATALOG.map(b=>`<option value="${b.id}">${escape(b.label)}</option>`).join('');
- $('#install-board').innerHTML=options;
- $('#board').innerHTML=options;
+ const installOptions=SCANNER_BOARDS.map(b=>`<option value="${b.id}">${escape(b.label)}</option>`).join('');
+ $('#install-board').innerHTML=installOptions;
+ fillFinalBoardOptions('');
+ $('#board-search').addEventListener('input',e=>fillFinalBoardOptions(e.target.value));
  $('#install-board').addEventListener('change',()=>{
    $('#board').value=$('#install-board').value;
    updateBoardWarning();
    void verifySelectedFirmware();
  });
  $('#board').addEventListener('change',()=>{
-   $('#board-note').textContent='Final ESPHome target: '+(getBoard($('#board').value)?.label||'unsupported board')+
-      '. Flashing the final ESPHome firmware replaces your temporary USB scanner.';
+   updateBoardWarning();
    if($('#yaml').value && selected && byMac.get(selected)?.lc?.stable)
       $('#yaml').value=espHomeScaleYAML(selected,$('#board').value);
  });
@@ -141,14 +157,15 @@ function updateBoardWarning(){
  $('#board-warning').textContent=b
    ? 'Selected '+b.label+' ('+b.chipFamily+', '+b.usb+'). IMPORTANT: confirm the correct USB port. Installing a scanner REPLACES any existing firmware.'
    : 'Choose an explicitly supported board first.';
- $('#board-note').textContent='Final ESPHome target: '+(getBoard($('#board').value)?.label||'not selected');
+ const target=getBoard($('#board').value);
+ $('#board-note').textContent=target?'Final ESPHome target: '+target.label+(target.scanner?' · scanner firmware available.':' · YAML PREVIEW ONLY; no scanner installer / ESPHome validation yet.'):'Choose a board.';
 }
 async function verifySelectedFirmware(){
  const seq=++flashCheckSeq;
  const b=getBoard($('#install-board').value);
  const wrapper=$('#install-wrapper');
  wrapper.hidden=true;
- if(!b){$('#firmware-notice').textContent='Unsupported board.';return;}
+ if(!b||!b.scanner){$('#firmware-notice').textContent='Scanner firmware unavailable for this model.';return;}
  if(!window.isSecureContext){$('#firmware-notice').textContent='Open this tool over HTTPS to enable USB firmware flashing.';return;}
  const path='./firmware/manifests/'+b.id+'.json';
  $('#flash-tool').setAttribute('manifest',path);
