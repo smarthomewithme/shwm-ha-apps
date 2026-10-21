@@ -1,0 +1,16 @@
+{
+  "name": "SHWM BLE USB Scanner - esp32-c3-devkitc-02",
+  "version": "0.4.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "../bin/esp32-c3-devkitc-02.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

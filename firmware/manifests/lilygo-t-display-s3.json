@@ -1,0 +1,16 @@
+{
+  "name": "SHWM BLE USB Scanner - lilygo-t-display-s3",
+  "version": "0.4.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "../bin/lilygo-t-display-s3.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

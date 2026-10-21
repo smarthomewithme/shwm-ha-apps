@@ -1,0 +1,16 @@
+{
+  "name": "SHWM BLE USB Scanner - lolin_c3_mini",
+  "version": "0.4.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "../bin/lolin_c3_mini.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

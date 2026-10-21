@@ -1,0 +1,16 @@
+{
+  "name": "SHWM BLE USB Scanner - um_tinys3",
+  "version": "0.4.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "../bin/um_tinys3.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

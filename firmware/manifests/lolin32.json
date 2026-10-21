@@ -1,0 +1,16 @@
+{
+  "name": "SHWM BLE USB Scanner - lolin32",
+  "version": "0.4.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "../bin/lolin32.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "SHWM BLE USB Scanner - adafruit_feather_esp32_v2",
+  "version": "0.4.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "../bin/adafruit_feather_esp32_v2.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
