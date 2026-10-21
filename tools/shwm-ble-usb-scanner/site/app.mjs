@@ -8,7 +8,7 @@ let sample={type:'adv',mac:'AA:BB:CC:DD:EE:FF',rssi:-73,name:'',
   manufacturerdata:'C022221A17700A0125AABBCCDDEEFF',manufacturerpayload:'221A17700A0125AABBCCDDEEFF',manufacturerid:'0x22C0',servicedata:'',servicedatauuid:''};
 const status=(str, kind='info')=>{$('#status').textContent=str;$('#status').dataset.kind=kind;};
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const setLiveButton=(live)=>{$('#connect').textContent=live?'Disconnect USB':'Connect and scan live';};
+const setLiveButton=(live)=>{$('#connect').textContent=live?'Disconnect USB':'Connect ESP32 and scan';};
 
 async function initTheengs(){
   $('#engine').textContent='Loading official Theengs WASM…';
@@ -40,6 +40,7 @@ function accept(obj) {
    theengs:theengs||previous?.theengs||null,updated:new Date()};
   if(byMac.size>=150&&!byMac.has(frame.mac))byMac.delete(byMac.keys().next().value);
   byMac.set(frame.mac,record);
+  if(!selected && lc?.stable) selected=frame.mac; // Auto-select verified scale for beginners.
   if(pendingRender===null) pendingRender=setTimeout(()=>{pendingRender=null;render();},140);
 }
 function render(){
@@ -50,31 +51,40 @@ function render(){
  $('#last-packet').textContent=packetCount?'latest '+new Date().toLocaleTimeString():'waiting for BLE advertisements';
  const items=[...byMac.values()].filter(x=>!$('#recognized-only').checked||x.lc||x.theengs)
    .sort((a,b)=>b.updated-a.updated).slice(0,150);
- if(!items.length){host.innerHTML='<tr><td colspan="6">No matching devices yet. Connect USB and wake up your BLE sensor, or disable the recognized-only filter.</td></tr>';return;}
+ if(!items.length){host.innerHTML='<tr><td colspan="6">No devices yet. Connect a scanner or choose Try LC026 example; advanced filters may hide unknown devices.</td></tr>';return;}
  host.innerHTML=items.map(item=>{
   const x=item.frame;
   const summary=summarizeDecoded(item.theengs,item.lc);
   const last=item.updated.toLocaleTimeString();
-  return `<tr><td><button type="button" data-mac="${escape(x.mac)}">${escape(x.mac)}</button></td>`+
+  return `<tr><td><button type="button" data-mac="${escape(x.mac)}">Select</button> <small>${escape(x.mac)}</small></td>`+
     `<td>${escape(x.name||'—')}</td><td>${escape(x.rssi)}</td><td>${escape(summary)}</td><td>${item.count}</td><td>${escape(last)}</td></tr>`;
  }).join('');
  [...host.querySelectorAll('[data-mac]')].forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.mac;showSelection();}));
  if(selected)showSelection();
 }
 $('#recognized-only').addEventListener('change',render);
-function showSelection(){const r=byMac.get(selected);if(!r)return;
- $('#selected').textContent=`Device: ${selected} | RSSI ${r.frame.rssi}`;
+function showSelection(){
+ const r=byMac.get(selected); if(!r)return;
+ const b=getBoard($('#board').value), reading=summarizeDecoded(r.theengs,r.lc);
+ $('#selected').textContent='Selected: '+(r.lc?'LC026-compatible scale':(r.frame.name||'Bluetooth device'))+' ('+selected+')';
  $('#raw').textContent=JSON.stringify(r.frame,null,2);
  $('#decoded').textContent=JSON.stringify({shwm_lc026:r.lc,theengs:r.theengs},null,2);
- $('#make-yaml').disabled=!(r.lc&&r.lc.stable);
- if(lastShownMac!==selected){ $('#yaml').value=''; lastShownMac=selected; }
+ if(r.lc?.stable) $('#reading').textContent='✓ Stable weight: '+r.lc.weight_kg.toFixed(2)+' kg';
+ else if(r.lc) $('#reading').textContent='Scale detected, but the measurement is still moving. Wait until it is stable.';
+ else if(r.theengs) $('#reading').textContent='Recognized: '+reading;
+ else $('#reading').textContent='Bluetooth data captured, but this device is not yet recognized.';
+ $('#make-yaml').disabled=!(r.lc?.stable&&b);
+ if(lastShownMac!==selected){ $('#yaml').value='';$('#copy').disabled=true;$('#download').disabled=true;lastShownMac=selected; }
+ const note=r.lc?.stable?'Ready! Click Generate ESPHome YAML. The code will use '+(b?.label||'your ESP32')+'.':r.lc?'Wait for the LC026 reading to become stable.':r.theengs?'Theengs recognizes this device, but we have no verified ESPHome YAML template for it yet.':'This BLE message is not yet supported for YAML generation. Do not guess a device profile.';
+ $('#yaml-note').textContent=note;$('#yaml-note').dataset.kind=r.lc?.stable?'ok':'warn';
  const state=r.lc?(r.lc.stable?'lc-stable':'lc-pending'):(r.theengs?'theengs':'unknown');
- if(state===lastSelectionStatus)return;
- lastSelectionStatus=state;
- if(r.theengs&&!r.lc)status('Recognized via Theengs; this profile does not yet have a verified ESPHome YAML generator.','warn');
- else if(r.lc&&!r.lc.stable)status('LC026 detected. Wait for stable measurement before creating YAML.','warn');
- else if(r.lc)status('Stable LC026 found. Generate ESPHome YAML.','ok');
- else status('RAW captured but no verified decoder. Do not guess values.','warn');
+ if(state!==lastSelectionStatus){
+   lastSelectionStatus=state;
+   if(r.theengs&&!r.lc) status('Device recognized; no verified YAML template for this model yet.','warn');
+   else if(r.lc&&!r.lc.stable)status('LC026 detected. Waiting for a stable reading.','warn');
+   else if(r.lc)status('Stable LC026 reading ready. Continue to Step 3.','ok');
+   else status('Bluetooth data captured. Decoder for this device is not yet verified.','warn');
+ }
 }
 function parseTextInput(str){
  let count=0;
@@ -107,20 +117,27 @@ async function connectSerial(){
  }
 }
 $('#connect').addEventListener('click',connectSerial);
-$('#demo').addEventListener('click',()=>{accept(sample);status('Example LC026 frame loaded (simulation, not live USB data).','ok');});
-$('#import').addEventListener('click',()=>{let n=parseTextInput($('#capture').value);status(`${n} JSONL packets imported.`);});
-$('#make-yaml').addEventListener('click',()=>{const d=byMac.get(selected);
- if(!d?.lc?.stable)return;$('#yaml').value=espHomeScaleYAML(selected,$('#board').value);
- status('ESPHome YAML generated (LC026 profile). Validate and COMPILE it in ESPHome Device Builder.','ok');
+$('#demo').addEventListener('click',()=>{selected=sample.mac;lastSelectionStatus='';accept(sample);status('LC026 example loaded (sample data, not a live measurement). Continue to Step 3.','ok');});
+$('#import').addEventListener('click',()=>{const n=parseTextInput($('#capture').value);status(n?`${n} scanner messages imported. Select a device below.`:'No valid SHWM Scanner JSON lines found. Check the data format.',n?'ok':'warn');});
+$('#make-yaml').addEventListener('click',()=>{
+ const d=byMac.get(selected),b=getBoard($('#board').value);
+ if(!d?.lc?.stable||!b){status('Choose a verified, stable LC026 reading and your board first.','warn');return;}
+ try{
+   $('#yaml').value=espHomeScaleYAML(selected,b.id);
+   $('#copy').disabled=false;$('#download').disabled=false;
+   $('#yaml-note').textContent='YAML ready for '+b.label+'. Click Copy YAML, then paste it into ESPHome Device Builder and validate/compile.';
+   $('#yaml-note').dataset.kind='ok';
+   status('YAML ready. Copy the code in Step 3.','ok');
+ }catch(e){status('Could not generate YAML: '+String(e.message||e),'warn');}
 });
-$('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#yaml').value);status('YAML copied.','ok')}catch{status('Select YAML and press Ctrl+C to copy.','warn')}});
+$('#copy').addEventListener('click',async()=>{const y=$('#yaml').value;if(!y){status('Generate YAML first.','warn');return;}try{await navigator.clipboard.writeText(y);status('Copied! Paste this YAML into ESPHome Device Builder.','ok')}catch{$('#yaml').focus();$('#yaml').select();status('YAML selected. Press Ctrl+C to copy.','warn')}});
 $('#download').addEventListener('click',()=>{const text=$('#yaml').value;if(!text)return;
  const u=URL.createObjectURL(new Blob([text],{type:'text/yaml;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='shwm-lc026-final-esphome.yaml';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000);
 });
 // Board choices are intentionally restricted to models compiled by the isolated CI build.
 // Separate manifests prevent ESP Web Tools silently picking the wrong board within one chip family.
 function fillFinalBoardOptions(query){
- const sel=$('#board'), previous=sel.value||$('#install-board').value||'esp32dev';
+ const sel=$('#board'), previous=sel.value||'esp32dev';
  const q=String(query||'').trim().toLowerCase();
  const matches=BOARD_CATALOG.filter(b=>!q||b.id.toLowerCase().includes(q)||b.label.toLowerCase().includes(q)||b.chipFamily.toLowerCase().includes(q));
  // Keep the previously selected target visible even when the filter excludes it.
@@ -133,39 +150,36 @@ function fillFinalBoardOptions(query){
  if(visible.length)sel.value=previous;
  $('#board-catalog-count').textContent=String(BOARD_CATALOG.length);
  $('#board-scan-count').textContent=String(SCANNER_BOARDS.length);
- $('#board-search-count').textContent=String(matches.length);
+ $('#board-search-status').textContent=matches.length+' matching board model'+(matches.length===1?'':'s')+'.';
 }
 function initializeBoardSelectors(){
- const installOptions=SCANNER_BOARDS.map(b=>`<option value="${b.id}">${escape(b.label)}</option>`).join('');
- $('#install-board').innerHTML=installOptions;
  fillFinalBoardOptions('');
  $('#board-search').addEventListener('input',e=>fillFinalBoardOptions(e.target.value));
- $('#install-board').addEventListener('change',()=>{
-   $('#board').value=$('#install-board').value;
-   updateBoardWarning();
-   void verifySelectedFirmware();
- });
  $('#board').addEventListener('change',()=>{
    updateBoardWarning();
-   if($('#yaml').value && selected && byMac.get(selected)?.lc?.stable)
-      $('#yaml').value=espHomeScaleYAML(selected,$('#board').value);
+   void verifySelectedFirmware();
+   if($('#yaml').value && selected && byMac.get(selected)?.lc?.stable){
+     $('#yaml').value=espHomeScaleYAML(selected,$('#board').value);
+     $('#yaml-note').textContent='Updated YAML for '+getBoard($('#board').value).label+'. Copy it again before compiling.';
+   }
+   if(selected) showSelection();
  });
  updateBoardWarning();
 }
 function updateBoardWarning(){
- const b=getBoard($('#install-board').value);
- $('#board-warning').textContent=b
-   ? 'Selected '+b.label+' ('+b.chipFamily+', '+b.usb+'). IMPORTANT: confirm the correct USB port. Installing a scanner REPLACES any existing firmware.'
-   : 'Choose an explicitly supported board first.';
- const target=getBoard($('#board').value);
- $('#board-note').textContent=target?'Final ESPHome target: '+target.label+(target.scanner?' · scanner firmware available.':' · YAML PREVIEW ONLY; no scanner installer / ESPHome validation yet.'):'Choose a board.';
+ const b=getBoard($('#board').value);
+ $('#board-confirm').textContent=b?b.label:'the board selected in Step 1';
+ $('#board-warning').textContent=b?'Selected: '+b.label+' ('+b.chipFamily+', '+b.usb+'). Confirm the hardware and USB port before flashing.':'Choose your exact board first.';
+ $('#board-note').textContent=b
+   ? b.scanner?'Scanner installer available for '+b.label+'. You can scan via USB and generate verified LC026 YAML.':'YAML preview only for '+b.label+'. There is no tested one-click BLE scanner for this model; use a compatible capture or the example instead.'
+   : 'Select a board to continue.';
 }
 async function verifySelectedFirmware(){
  const seq=++flashCheckSeq;
- const b=getBoard($('#install-board').value);
+ const b=getBoard($('#board').value);
  const wrapper=$('#install-wrapper');
  wrapper.hidden=true;
- if(!b||!b.scanner){$('#firmware-notice').textContent='Scanner firmware unavailable for this model.';return;}
+ if(!b||!b.scanner){$('#firmware-notice').textContent='No one-click BLE Scanner for this board. You may still preview the verified LC026 YAML using the example or imported readings.';return;}
  if(!window.isSecureContext){$('#firmware-notice').textContent='Open this tool over HTTPS to enable USB firmware flashing.';return;}
  const path='./firmware/manifests/'+b.id+'.json';
  $('#flash-tool').setAttribute('manifest',path);
