@@ -104,3 +104,72 @@ jobs:
           name: shwm-ble-scanner-complete-web-app
           path: tools/shwm-ble-usb-scanner/site
           if-no-files-found: error
+
+  publish-pages-preview:
+    name: Stage isolated GitHub Pages preview
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/shwm-ble-usb-installer' && github.event_name == 'push'
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+          path: pages
+      - name: Retrieve CI-tested web application
+        uses: actions/download-artifact@v4
+        with:
+          name: shwm-ble-scanner-complete-web-app
+          path: preview-site
+      - name: Verify six firmware images and Theengs engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s preview-site/index.html
+          test -s preview-site/app.mjs
+          test -s preview-site/core.mjs
+          test -s preview-site/vendor/theengs_decoder_wasm.mjs
+          test "$(find preview-site/firmware/bin -maxdepth 1 -name '*.bin' -type f | wc -l)" -eq 6
+          test "$(find preview-site/firmware/manifests -maxdepth 1 -name '*.json' -type f | wc -l)" -eq 6
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('preview-site/firmware')
+          for m in root.joinpath('manifests').glob('*.json'):
+              data=json.loads(m.read_text())
+              assert len(data['builds'])==1
+              for part in data['builds'][0]['parts']:
+                  image=(m.parent / part['path']).resolve()
+                  assert image.is_relative_to(root.resolve())
+                  assert image.is_file() and image.stat().st_size>100000
+          print('Six board manifests passed validation.')
+          PY
+      - name: Stage preview branch without altering main
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="gh-pages-shwm-ble-preview"
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "$target" >/dev/null; then
+            git fetch origin "$target"
+            git checkout -B "$target" FETCH_HEAD
+          else
+            git checkout --orphan "$target"
+            git rm -rf --ignore-unmatch . >/dev/null || true
+          fi
+          rsync -a --delete --exclude=.git/ "$GITHUB_WORKSPACE/preview-site/" .
+          touch .nojekyll
+          printf 'User-agent: *\nDisallow: /\n' > robots.txt
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "preview(shwm-ble): tested static app $GITHUB_SHA"
+            git push origin "HEAD:refs/heads/$target"
+          else
+            echo "Preview branch already matches CI-tested assets"
+          fi
+          echo "Manual GitHub setting: Pages > Deploy from a branch > gh-pages-shwm-ble-preview / (root)."
