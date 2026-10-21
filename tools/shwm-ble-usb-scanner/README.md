@@ -50,3 +50,11 @@ Avoid WordPress inline JS: Gutenberg may sanitize `<script>` tags, and caching c
 ## Data and third-party components
 
 SHWM code GPL-3.0-or-later. Theengs Decoder is GPL-3.0-only. Its independently built binary in `site/vendor/` comes from the official v2.4.5 source; we retain attribution and offer the source URL and version. See `THIRD_PARTY.md`. ESP Web Tools is consumed from its official distribution. No BLE uploads to our servers: Web Serial and WebAssembly run locally in the browser.
+
+## Enable the isolated GitHub Pages preview (2026-10-21)
+
+Repository owner selected **Settings → Pages → Build and deployment → Source: GitHub Actions**. Do not configure the generic Jekyll or Static HTML template, and do not change the repository default branch.
+
+The isolated CI workflow at `.github/workflows/shwm-ble-scanner.yml` builds all **six** ESP32 board targets, compiles the pinned Theengs WASM, stages a fallback snapshot to `gh-pages-shwm-ble-preview`, and attempts official GitHub Pages deployment **only when the configured Pages source is GitHub Actions**. The preview is a public experimental tool, not hardware-verified. Do not embed it in the published WordPress article until the USB flash / receive path is verified with a spare ESP32.
+
+On successful deployment, confirm the URL from the **Actions deploy job output** and verify real HTTPS loads. Successful CI compilation alone does not prove GitHub Pages was deployed.
