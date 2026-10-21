@@ -166,6 +166,14 @@ async function verifySelectedFirmware(){
    if(binary.origin!==window.location.origin)throw new Error('firmware origin mismatch');
    const head=await fetch(binary.href,{method:'HEAD',cache:'no-store'});
    if(!head.ok || Number(head.headers.get('content-length')||0)<100000)throw new Error('firmware missing');
+   // Fail closed when the ESP Web Tools script is blocked or not yet registered.
+   if(!window.customElements)throw new Error('browser has no custom-element support');
+   if(!window.customElements.get('esp-web-install-button')){
+     await Promise.race([
+       window.customElements.whenDefined('esp-web-install-button'),
+       new Promise((_,reject)=>setTimeout(()=>reject(new Error('ESP Web Tools installer script unavailable')),7000))
+     ]);
+   }
    if(seq!==flashCheckSeq)return;
    wrapper.hidden=false;
    $('#firmware-notice').textContent='Ready: precompiled BLE scanner for '+b.label+'. Verify the model before installing.';
