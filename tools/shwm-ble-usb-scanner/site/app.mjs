@@ -3,7 +3,7 @@ import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScale
 const $ = selector => document.querySelector(selector);
 const byMac = new Map();
 let port=null, reader=null, stop=false, moduleDecoder=null, selected='', packetCount=0, pendingRender=null;
-let flashCheckSeq=0;
+let flashCheckSeq=0, lastShownMac='', lastSelectionStatus='';
 let sample={type:'adv',mac:'AA:BB:CC:DD:EE:FF',rssi:-73,name:'',
   manufacturerdata:'C022221A17700A0125AABBCCDDEEFF',manufacturerpayload:'221A17700A0125AABBCCDDEEFF',manufacturerid:'0x22C0',servicedata:'',servicedatauuid:''};
 const status=(str, kind='info')=>{$('#status').textContent=str;$('#status').dataset.kind=kind;};
@@ -67,7 +67,10 @@ function showSelection(){const r=byMac.get(selected);if(!r)return;
  $('#raw').textContent=JSON.stringify(r.frame,null,2);
  $('#decoded').textContent=JSON.stringify({shwm_lc026:r.lc,theengs:r.theengs},null,2);
  $('#make-yaml').disabled=!(r.lc&&r.lc.stable);
- $('#yaml').value='';
+ if(lastShownMac!==selected){ $('#yaml').value=''; lastShownMac=selected; }
+ const state=r.lc?(r.lc.stable?'lc-stable':'lc-pending'):(r.theengs?'theengs':'unknown');
+ if(state===lastSelectionStatus)return;
+ lastSelectionStatus=state;
  if(r.theengs&&!r.lc)status('Recognized via Theengs; this profile does not yet have a verified ESPHome YAML generator.','warn');
  else if(r.lc&&!r.lc.stable)status('LC026 detected. Wait for stable measurement before creating YAML.','warn');
  else if(r.lc)status('Stable LC026 found. Generate ESPHome YAML.','ok');
