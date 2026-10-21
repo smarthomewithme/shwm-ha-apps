@@ -12,7 +12,7 @@ test('YAML full output has correct MAC, OTA and secrets and selects actual board
 test('board/MAC injection rejected',()=>{assert.throws(()=>espHomeScaleYAML('DROP;TABLES'));assert.throws(()=>espHomeScaleYAML(frame.mac,'strange_board'))});
 test('expanded board catalog covers only BLE-capable ESP32 families',()=>{
   assert.equal(BOARD_CATALOG.length,45);
-  assert.equal(SCANNER_BOARDS.length,23);
+  assert.equal(SCANNER_BOARDS.length,22);
   assert.equal(new Set(BOARD_CATALOG.map(x=>x.id)).size,45);
   assert.deepEqual(new Set(BOARD_CATALOG.map(x=>x.chipFamily)),new Set(['ESP32','ESP32-C3','ESP32-S3']));
   assert.equal(getBoard('esp32-s3-devkitc-1').chipFamily,'ESP32-S3');

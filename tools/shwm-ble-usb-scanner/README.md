@@ -63,8 +63,10 @@ On successful deployment, confirm the URL from the **Actions deploy job output**
 ## Expanded BLE board database — v0.4 (pending CI/hardware validation)
 
 - Catalog: **45 ESP32 boards** with pinned identifiers from PlatformIO espressif32 6.9.0.
-- Compiled scanner targets: **23 models**, split between original ESP32, ESP32-C3 and ESP32-S3. Each scanner image is built separately, merged with board-specific flash sizes and served with an exact model manifest.
-- Other **22 catalog-only boards** are deliberately marked **YAML preview only**; the USB scanner installer will NOT claim support. The generator's ESPHome YAML must be checked in ESPHome Device Builder; board ID presence does not guarantee firmware validation.
+- Compiled scanner targets: **22 models**, split between original ESP32, ESP32-C3 and ESP32-S3. Each scanner image is built separately, merged with board-specific flash sizes and served with an exact model manifest.
+- Other **23 catalog-only boards** are deliberately marked **YAML preview only**; the USB scanner installer will NOT claim support. The generator's ESPHome YAML must be checked in ESPHome Device Builder; board ID presence does not guarantee firmware validation.
 - ESP32-S2 excluded entirely (no Bluetooth radio). ESP32-C6 and newer chips are deferred until compatible NimBLE scanner builds and Web Tools chip support are verified with the chosen toolchain.
 - New searchable board selector filters manufacturer/chip family/model without removing the current target choice.
 - Flashing overwrites a board's existing firmware; use a spare ESP32. No physical testing of the new models has been performed by this code-only workflow.
+
+Adafruit Feather ESP32-S3 is temporarily YAML-preview only under pinned PlatformIO 6.9.0: its 2026-10-21 CI compilation did not emit the `bootloader.bin` required for a safe merged installer image. The other 22 scanner targets emitted their own bootloader files in the CI build logs. Never substitute an unrelated bootloader.

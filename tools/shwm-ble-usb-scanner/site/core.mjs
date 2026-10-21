@@ -21,7 +21,7 @@ export const BOARD_CATALOG = Object.freeze([
   {"id":"esp32-s3-devkitm-1","label":"ESP32-S3 DevKitM-1","chipFamily":"ESP32-S3","usb":"USB CDC (native port)","flashMB":8,"scanner":true},
   {"id":"seeed_xiao_esp32s3","label":"Seeed XIAO ESP32-S3","chipFamily":"ESP32-S3","usb":"USB CDC","flashMB":8,"scanner":true},
   {"id":"lolin_s3_mini","label":"Wemos LOLIN S3 Mini","chipFamily":"ESP32-S3","usb":"USB CDC","flashMB":4,"scanner":true},
-  {"id":"adafruit_feather_esp32s3","label":"Adafruit Feather ESP32-S3","chipFamily":"ESP32-S3","usb":"USB CDC","flashMB":4,"scanner":true},
+  {"id":"adafruit_feather_esp32s3","label":"Adafruit Feather ESP32-S3","chipFamily":"ESP32-S3","usb":"USB CDC","flashMB":4,"scanner":false},
   {"id":"lilygo-t-display-s3","label":"LILYGO T-Display S3","chipFamily":"ESP32-S3","usb":"USB CDC","flashMB":16,"scanner":true},
   {"id":"um_tinys3","label":"Unexpected Maker TinyS3","chipFamily":"ESP32-S3","usb":"USB CDC","flashMB":8,"scanner":true},
   {"id":"adafruit_itsybitsy_esp32","label":"Adafruit ItsyBitsy ESP32","chipFamily":"ESP32","usb":"USB-UART","flashMB":4,"scanner":false},

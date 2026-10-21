@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           cd tools/shwm-ble-usb-scanner
-          node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';if(SCANNER_BOARDS.length!==23)process.exit(1);console.log(SCANNER_BOARDS.length+' targets')"
+          node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';if(SCANNER_BOARDS.length!==22)process.exit(1);console.log(SCANNER_BOARDS.length+' targets')"
           for env in $(node --input-type=module -e "import{SCANNER_BOARDS}from './site/core.mjs';console.log(SCANNER_BOARDS.map(b=>b.id).join(' '))"); do
             echo "=== Compiling $env ==="
             pio run -d scanner -e "$env"
@@ -130,8 +130,8 @@ jobs:
           test -s preview-site/app.mjs
           test -s preview-site/core.mjs
           test -s preview-site/vendor/theengs_decoder_wasm.mjs
-          test "$(find preview-site/firmware/bin -maxdepth 1 -name '*.bin' -type f | wc -l)" -eq 23
-          test "$(find preview-site/firmware/manifests -maxdepth 1 -name '*.json' -type f | wc -l)" -eq 23
+          test "$(find preview-site/firmware/bin -maxdepth 1 -name '*.bin' -type f | wc -l)" -eq 22
+          test "$(find preview-site/firmware/manifests -maxdepth 1 -name '*.json' -type f | wc -l)" -eq 22
           python - <<'PY'
           import json, pathlib
           root=pathlib.Path('preview-site/firmware')
