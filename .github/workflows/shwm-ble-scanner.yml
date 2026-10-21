@@ -173,3 +173,72 @@ jobs:
             echo "Preview branch already matches CI-tested assets"
           fi
           echo "Manual GitHub setting: Pages > Deploy from a branch > gh-pages-shwm-ble-preview / (root)."
+
+  deploy-pages-when-configured:
+    name: Deploy preview after owner enables GitHub Pages Actions
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/shwm-ble-usb-installer' && github.event_name == 'push'
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check whether GitHub Pages Actions source is enabled
+        id: pages-ready
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          code=$(curl --silent --show-error --output pages.json --write-out '%{http_code}' \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/pages")
+          if [ "$code" != 200 ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages not configured: go to Settings > Pages > Source: GitHub Actions."
+            exit 0
+          fi
+          if python - <<'PY'
+          import json
+          conf=json.load(open('pages.json'))
+          print('GitHub Pages existing site:',conf.get('html_url','(not set)'))
+          assert conf.get('build_type') == 'workflow', 'Existing Pages is NOT GitHub Actions-based; do not overwrite it.'
+          PY
+          then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Pages source must be GitHub Actions; no deployment performed."
+          fi
+      - name: Download tested site
+        if: steps.pages-ready.outputs.ready == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: shwm-ble-scanner-complete-web-app
+          path: preview-site
+      - name: Verify Pages asset layout
+        if: steps.pages-ready.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s preview-site/index.html
+          test -s preview-site/vendor/theengs_decoder_wasm.mjs
+          test "$(find preview-site/firmware/bin -name '*.bin' -type f | wc -l)" -eq 6
+          test "$(find preview-site/firmware/manifests -name '*.json' -type f | wc -l)" -eq 6
+          touch preview-site/.nojekyll
+          printf 'User-agent: *\nDisallow: /\n' > preview-site/robots.txt
+      - name: Package official Pages deployment
+        if: steps.pages-ready.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: preview-site
+      - name: Deploy GitHub Pages preview
+        if: steps.pages-ready.outputs.ready == 'true'
+        uses: actions/deploy-pages@v4
+        id: deployment
