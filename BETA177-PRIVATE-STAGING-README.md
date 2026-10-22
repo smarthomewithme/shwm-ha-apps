@@ -1,3 +1,32 @@
+# SHWM Content Engine beta.181 — EXISTING PRIVATE GHCR STAGING CHANNEL
+
+**Current state (22.10.2026):** the existing Home Assistant staging repository branch `beta177-private-staging` now advertises **beta.181** in `shwm_content_engine/config.yaml` (commit `b747661f6a57d89a5dc0b25e97620fe4d3a9e3c0`). This is a Git metadata change only. **It has NOT installed, upgraded or started any Home Assistant application**. It does not update production `main`, any WordPress site, Facebook profile/page/group, or publication worker.
+
+## Verified private beta.181 GHCR image
+
+- Source repository: private `smarthomewithme/shwm-content-engine`; source SHA `97b56de2ba478e7bc1c41bca69ec63751d9fbc31` (PR #131).
+- Validation Cloud Build: `2d40921e-34d3-4110-9368-842440771684` — **8/8 SUCCESS**.
+- One direct GHCR-only Cloud Build: `2afa9ff0-c53a-4c08-a9f1-f088a0aae731` — **12/12 SUCCESS**, created 22.10.2026 08:13:14 UTC. This is the successful release; the failed tag-triggered GitHub Actions run did not run any container build.
+- Private image: `ghcr.io/smarthomewithme/shwm-content-engine-beta181-staging:0.4.2-beta.181`.
+- Verified immutable digest: `sha256:e80157761436563f4b63622407b1b991ca98d33514f28e18e888d107433c50ab` (from direct Cloud Build step `verify-private-ghcr-digest`).
+- Positive markers: `GHCR_BETA181_STAGING_PRIVATE_VERIFIED`, `SHWM_HA_WP_FACEBOOK_UNCHANGED`.
+- Existing HA-facing manifest uses `version: "0.4.2-beta.181"` and an `image:` without explicit version tag, as required by the existing Supervisor add-on metadata layout.
+
+## Owner-only isolated Home Assistant acceptance
+
+1. **Use only the pre-existing isolated/test HA**, not production. Back up app options, database, browser identity profile, persistent storage and relevant secrets, but never commit or paste their values in GitHub.
+2. Keep the pre-existing repository URL `https://github.com/smarthomewithme/shwm-ha-apps#beta177-private-staging`. Do not add a duplicate repository, change app `slug`, install production branch or touch `main`.
+3. Refresh the Apps/add-on store metadata in the isolated HA; confirm **beta.181** and image `ghcr.io/smarthomewithme/shwm-content-engine-beta181-staging`. If the version does not appear, STOP rather than recreating or reinstalling.
+4. Authenticate the **private** GHCR package only in the isolated HA if required. If a pull returns 401/403, STOP; do not make the package public, upload a registry credential to GitHub, or switch to a nonstaging package.
+5. Independently verify pulled digest against the above immutable `sha256:` before starting the app. A manifest update is not a digest attestation.
+6. If explicitly upgrading the isolated app, preserve persistent data and confirm `boot: manual`, no automatic publication, PAUSED worker and staging-only ingress; do not execute real Facebook/WordPress posts. The previous beta.180 package remains available for a deliberately reviewed rollback, subject to SQLite migration compatibility.
+
+**Do not** rebuild GHCR, rerun Google build `2afa9ff0-c53a-4c08-a9f1-f088a0aae731`, delete the one-shot local release lock, or rerun tag `shwm-beta181-private-ghcr-approve-20261022`. This release has already succeeded. A separate owner-controlled HA upgrade is the only remaining deployment step.
+
+---
+
+## Historical staging notes (beta.178 snapshot; not current install instructions)
+
 # SHWM Content Engine beta.178 — PRIVATE GHCR STAGING TEST
 
 **The existing beta.177 HA test channel has been upgraded in GitHub metadata to beta.178 (18.10.2026).** The HA-visible short Git branch name `beta177-private-staging` is kept **deliberately**: do not create a new test branch, URL fragment, HA repository, app slug or Supervisor entry. **This does not prove an installation in Home Assistant**. Production `main` remains unchanged, and nothing has been published to Facebook.
