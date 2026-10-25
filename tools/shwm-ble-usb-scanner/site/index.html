@@ -6,7 +6,7 @@
 </style>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script></head>
 <body>
-<h1>Explore cheap Bluetooth devices <small>SHWM BLE Scanner &amp; ESPHome Generator v0.4</small></h1>
+<h1>Explore cheap Bluetooth devices <small>SHWM BLE Scanner &amp; ESPHome Generator v0.5</small></h1>
 <p>Discover advertisements from affordable Bluetooth scales, thermometers and other BLE gadgets — no vendor app or cloud account required for supported broadcasts. <strong>Recognizing a device is not the same as having ESPHome YAML:</strong> our LC026 scale is currently the only profile with independently verified YAML generation.</p>
 <p class="warning"><strong>Before flashing:</strong> the initial BLE Scanner replaces any firmware already on your ESP32. Back up an existing ESPHome configuration first. Use a spare board when possible. Only click Install on the correct USB device.</p>
 <section id="choose-board"><h2>Step 1 · Choose your ESP32 (one time)</h2>
@@ -18,19 +18,19 @@
 <p class="muted" id="board-warning">Check your ESP32 model and USB port.</p>
 <p class="notice" id="firmware-notice" role="status">Checking BLE Scanner firmware…</p>
 <div id="install-wrapper" hidden><esp-web-install-button id="flash-tool" manifest="./firmware/manifests/esp32dev.json"><button type="button" slot="activate">Install temporary BLE Scanner</button><span slot="unsupported">Use desktop Chrome or Edge with a USB data cable.</span></esp-web-install-button></div>
-<p class="step-note"><strong>Warning:</strong> installing the scanner replaces any firmware already on your ESP32. Back up first or use a spare board. If your model is “YAML preview only”, try the LC026 example or import a compatible scan rather than attempting an unsupported installation.</p>
+<p class="step-note"><strong>Warning:</strong> installing the scanner replaces any firmware already on your ESP32. Back up first or use a spare board. If your model is “YAML preview only”, use a supported ESP32 for live scanning or import a compatible scan rather than attempting an unsupported installation.</p>
 </section>
-<section id="read-bluetooth"><h2>Step 2 · Get a Bluetooth reading</h2>
-<p><strong>Have a scanner?</strong> Click <strong>Connect ESP32 and scan</strong>, then wake your Bluetooth gadget (step on the scale to trigger it). <strong>No hardware?</strong> Click <strong>Try LC026 example</strong> to test the whole generator safely.</p>
-<div class="action-row"><button type="button" id="connect">Connect ESP32 and scan</button><button type="button" id="demo">Try LC026 example</button></div>
-<p id="status" role="status">Ready. Connect the scanner or try the example.</p>
-<p class="step-note"><strong>Next:</strong> click <strong>Select</strong> next to a device below. For a verified LC026 example, we will do this automatically.</p>
+<section id="read-bluetooth"><h2>Step 2 · Scan nearby Bluetooth devices</h2>
+<p><strong>Live scan:</strong> install the temporary SHWM BLE Scanner firmware from Step 1, connect that ESP32 via USB, then click <strong>Scan nearby BLE</strong> and choose its COM port. Step on your scale to wake it. Devices and decoded measurements will appear below as packets arrive. <strong>Normal ESPHome firmware does not send scanner JSON data</strong>; this website cannot read an ESPHome sensor automatically.</p>
+<div class="action-row"><button type="button" id="connect">Scan nearby BLE</button></div>
+<p id="status" role="status">Ready to scan. Requires an ESP32 with temporary SHWM scanner firmware and USB cable.</p>
+<p class="step-note"><strong>Live results:</strong> devices appear when BLE packets arrive. Click <strong>Select</strong> to inspect one; a stable LC026 weight is selected automatically. If nothing appears, verify scanner firmware and USB connection rather than loading sample data.</p>
 <div class="table-wrap"><table><thead><tr><th>Choose</th><th>Device name</th><th>Signal</th><th>Reading</th><th>Packets</th><th>Last seen</th></tr></thead><tbody id="devices"></tbody></table></div>
 <details><summary>No USB? Paste previously captured scanner data</summary><p>Copy JSON lines from the <strong>SHWM USB Scanner</strong> serial output and paste them below (one JSON object per line). Then click <strong>Read pasted data</strong>. You do <strong>not</strong> copy RAW into Decoded — both are automatically displayed in Step 3.</p><textarea id="capture" aria-label="Paste SHWM scanner JSON lines"></textarea><button type="button" id="import">Read pasted data</button></details>
 <details><summary>Advanced: scanner status and filters</summary><p><small>Decoder engine: <span id="engine">Loading…</span></small></p><p class="muted">Received <span id="rx-count">0</span> packets; recognized devices: <span id="known-count">0</span>; <span id="last-packet">waiting for BLE advertisements</span>.</p><p><label><input id="recognized-only" type="checkbox"> Hide unrecognized devices</label></p></details>
 </section>
 <section id="generate-yaml"><h2>Step 3 · See the result and copy YAML</h2>
-<p id="selected">No device selected. Try Step 2 — the LC026 example is selected automatically.</p>
+<p id="selected">No device selected. Click Scan nearby BLE in Step 2 and wake your device.</p>
 <p id="reading" class="result-text" role="status">Your decoded reading will appear here.</p>
 <p id="yaml-note" role="status" data-kind="warn">YAML requires a verified, stable LC026 scale reading. Other recognized devices do not yet have validated YAML templates.</p>
 <details><summary>Advanced: original data (RAW) and decoded details</summary><p><strong>RAW</strong> is the original Bluetooth message. <strong>Decoded</strong> is what the decoder understood. Both are read-only results; you do not paste anything between them.</p><div class="grid"><div><strong>Original message (RAW)</strong><pre id="raw">No device selected</pre></div><div><strong>Decoder details</strong><pre id="decoded">No device selected</pre></div></div></details>
