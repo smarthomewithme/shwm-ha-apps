@@ -1,4 +1,4 @@
-// SHWM BLE USB Scanner 0.2 -- GPL-3.0-or-later.
+// SHWM BLE USB Scanner 0.5 -- GPL-3.0-or-later.
 // No Wi-Fi, vendor/cloud accounts, pairing, connection or GATT operations.
 // Outputs one advertisement per JSON line at 115200 baud over USB serial.
 #include <Arduino.h>
@@ -6,6 +6,14 @@
 #include <string>
 
 static constexpr uint32_t SCAN_MS = 30000;
+static volatile bool scanRequested = false;
+static uint32_t lastHello = 0;
+
+static void sayHello() {
+  Serial.println(F("{\"type\":\"hello\",\"firmware\":\"SHWM BLE USB Scanner\",\"version\":\"0.5.0\",\"baud\":115200}"));
+  lastHello = millis();
+}
+
 
 static String asHex(const std::string &bytes, size_t from = 0) {
   static constexpr char digits[] = "0123456789ABCDEF";
@@ -60,14 +68,13 @@ class ScanCallbacks : public NimBLEScanCallbacks {
     Serial.println(F("\"}"));
   }
   void onScanEnd(const NimBLEScanResults&, int) override {
-    NimBLEDevice::getScan()->start(SCAN_MS, false, true);
+    if (scanRequested) NimBLEDevice::getScan()->start(SCAN_MS, false, true);
   }
 } callbacks;
 
 void setup() {
   Serial.begin(115200);
   delay(1500);
-  Serial.println(F("{\"type\":\"hello\",\"firmware\":\"SHWM BLE USB Scanner\",\"version\":\"0.2.0\",\"baud\":115200}"));
   NimBLEDevice::init("");
   NimBLEScan* scanner = NimBLEDevice::getScan();
   scanner->setScanCallbacks(&callbacks, true);
@@ -75,7 +82,37 @@ void setup() {
   scanner->setMaxResults(0);
   scanner->setInterval(100);
   scanner->setWindow(90);
-  scanner->start(SCAN_MS, false, true);
+  sayHello(); // Scan starts ONLY after the browser sends SCAN.
 }
 
-void loop() { delay(20); }
+void loop() {
+  static char command[20] = {0};
+  static size_t used = 0;
+  while (Serial.available() > 0) {
+    const char ch = (char)Serial.read();
+    if (ch == '\n' || ch == '\r') {
+      if (!used) continue;
+      command[used] = '\0';
+      if (strcmp(command, "PING") == 0) {
+        sayHello();
+      } else if (strcmp(command, "SCAN") == 0) {
+        scanRequested = true;
+        NimBLEDevice::getScan()->start(SCAN_MS, false, true);
+        Serial.println(F("{\"type\":\"scan_state\",\"state\":\"scanning\"}"));
+      } else if (strcmp(command, "STOP") == 0) {
+        scanRequested = false;
+        NimBLEDevice::getScan()->stop();
+        Serial.println(F("{\"type\":\"scan_state\",\"state\":\"stopped\"}"));
+      } else {
+        Serial.println(F("{\"type\":\"scan_state\",\"state\":\"error\",\"reason\":\"unknown_command\"}"));
+      }
+      used = 0;
+    } else if (used < sizeof(command) - 1 && ch >= 0x20 && ch <= 0x7e) {
+      command[used++] = ch;
+    } else {
+      used = 0; // Reject malformed or overlong commands.
+    }
+  }
+  if (!scanRequested && (uint32_t)(millis() - lastHello) >= 2500) sayHello();
+  delay(20);
+}

@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/shwm-ble-usb-installer
+      - fix/ble-live-scan-step2-20261025
   workflow_dispatch:
 permissions:
   contents: read
@@ -59,7 +60,7 @@ jobs:
           import json, os, pathlib
           board, family = os.environ["BOARD"], os.environ["CHIP_FAMILY"]
           manifest={"name":"SHWM BLE USB Scanner - "+board,
-                    "version":"0.4.0", "new_install_prompt_erase":True,
+                    "version":"0.5.0", "new_install_prompt_erase":True,
                     "builds":[{"chipFamily":family,"parts":[{"path":"../bin/"+board+".bin","offset":0}]}]}
           path=pathlib.Path("site/firmware/manifests")/(board+".json")
           path.write_text(json.dumps(manifest,indent=2)+"\n", encoding="utf-8")
