@@ -4,11 +4,9 @@ const $ = selector => document.querySelector(selector);
 const byMac = new Map();
 let port=null, reader=null, stop=false, moduleDecoder=null, selected='', packetCount=0, pendingRender=null;
 let flashCheckSeq=0, lastShownMac='', lastSelectionStatus='';
-let sample={type:'adv',mac:'AA:BB:CC:DD:EE:FF',rssi:-73,name:'',
-  manufacturerdata:'C022221A17700A0125AABBCCDDEEFF',manufacturerpayload:'221A17700A0125AABBCCDDEEFF',manufacturerid:'0x22C0',servicedata:'',servicedatauuid:''};
 const status=(str, kind='info')=>{$('#status').textContent=str;$('#status').dataset.kind=kind;};
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const setLiveButton=(live)=>{$('#connect').textContent=live?'Disconnect USB':'Connect ESP32 and scan';};
+const setLiveButton=(live)=>{$('#connect').textContent=live?'Stop scanning':'Scan nearby BLE';};
 
 async function initTheengs(){
   $('#engine').textContent='Loading official Theengs WASM…';
@@ -51,7 +49,7 @@ function render(){
  $('#last-packet').textContent=packetCount?'latest '+new Date().toLocaleTimeString():'waiting for BLE advertisements';
  const items=[...byMac.values()].filter(x=>!$('#recognized-only').checked||x.lc||x.theengs)
    .sort((a,b)=>b.updated-a.updated).slice(0,150);
- if(!items.length){host.innerHTML='<tr><td colspan="6">No devices yet. Connect a scanner or choose Try LC026 example; advanced filters may hide unknown devices.</td></tr>';return;}
+ if(!items.length){host.innerHTML='<tr><td colspan="6">No live BLE devices yet. Click Scan nearby BLE, select the ESP32 port and wake your device; advanced filters may hide unknown devices.</td></tr>';return;}
  host.innerHTML=items.map(item=>{
   const x=item.frame;
   const summary=summarizeDecoded(item.theengs,item.lc);
@@ -96,28 +94,90 @@ function parseTextInput(str){
  return count;
 }
 function addLines(raw){const el=$('#capture');el.value=(el.value+raw+'\n').slice(-60000);parseTextInput(raw);}
+async function sendSerialCommand(command) {
+ if (!port?.writable) return false;
+ let writer;
+ try {
+  writer=port.writable.getWriter();
+  await writer.write(new TextEncoder().encode(command+'\n'));
+  return true;
+ } finally {if(writer)writer.releaseLock();}
+}
 async function connectSerial(){
- if(reader){stop=true;try{await reader.cancel()}catch{};return;}
- if(!window.isSecureContext||!('serial' in navigator)){status('Web Serial unavailable. Open HTTPS in Chrome or Edge on a desktop computer.','warn');return;}
+ if(reader){
+  stop=true;
+  try{await sendSerialCommand('STOP')}catch{}
+  try{await reader.cancel()}catch{}
+  return;
+ }
+ if(!window.isSecureContext||!('serial' in navigator)){
+  status('Live scan needs Web Serial: open this HTTPS app in desktop Chrome or Edge and connect an ESP32 over USB.','warn');return;
+ }
+ let timeoutId=null, scannerIdentified=false, sawPacket=false, commandSent=false;
  try{
-  port=await navigator.serial.requestPort();await port.open({baudRate:115200});stop=false;
-  setLiveButton(true);status('USB connected. Scanner must already be installed. Wake your BLE device.','ok');
-  const decoder=new TextDecoder();let buffer='';reader=port.readable.getReader();
-  while(!stop){let {value,done}=await reader.read();if(done)break;
+  port=await navigator.serial.requestPort();
+  await port.open({baudRate:115200});
+  stop=false;
+  byMac.clear();selected='';packetCount=0;lastShownMac='';lastSelectionStatus='';
+  $('#raw').textContent='No device selected';$('#decoded').textContent='No device selected';
+  $('#selected').textContent='Waiting for a live BLE device';
+  $('#reading').textContent='Waiting for nearby BLE advertisements…';
+  $('#yaml').value='';$('#copy').disabled=true;$('#download').disabled=true;$('#make-yaml').disabled=true;
+  render();
+  setLiveButton(true);
+  status('USB connected. Checking for SHWM BLE Scanner firmware (not standard ESPHome)…');
+  timeoutId=setTimeout(()=>{
+    if(stop)return;
+    if(!scannerIdentified&&!sawPacket)status('No SHWM Scanner data received. Is the TEMPORARY scanner firmware installed? Standard ESPHome logs cannot be read as BLE packets. Check port and USB cable.','warn');
+    else if(!sawPacket)status('Scanner is connected but no BLE advertisements have arrived. Wake your device and move it closer to the ESP32.','warn');
+  },8500);
+  const decoder=new TextDecoder();let buffer='';
+  reader=port.readable.getReader();
+  while(!stop){
+   const {value,done}=await reader.read();if(done)break;
    buffer+=decoder.decode(value,{stream:true});
    if(buffer.length>100000){buffer='';status('USB stream overflow; input buffer reset.','warn');}
    const lines=buffer.split(/\r?\n/);buffer=lines.pop()||'';
-   for(const line of lines){if(!line.trim()||line.length>4000)continue;const obj=parseLine(line);if(obj?.hello){status('SHWM BLE Scanner detected. Scan running.','ok');continue;}if(obj)addLines(line);}
+   for(const line of lines){
+    if(!line.trim()||line.length>4000)continue;
+    let obj;try{obj=JSON.parse(line);}catch{continue;}
+    if(obj?.type==='hello'){
+     if(obj.firmware!=='SHWM BLE USB Scanner'){
+      status('Connected USB device sent an unknown greeting. SHWM scanner firmware required.','warn');continue;
+     }
+     scannerIdentified=true;
+     if(!commandSent){
+      commandSent=true;
+      try{await sendSerialCommand('SCAN');status('SHWM Scanner detected. Starting nearby Bluetooth scan…','ok');}
+      catch(err){status('Scanner detected, but SCAN command failed: '+String(err.message||err),'warn');}
+     }
+     continue;
+    }
+    if(obj?.type==='scan_state'){
+     if(obj.state==='scanning')status('BLE scan running. Step on the scale and watch the device list update live.','ok');
+     else if(obj.state==='stopped')status('BLE scan stopped.');
+     continue;
+    }
+    const frame=parseLine(line);
+    if(frame&&!frame.hello){
+     sawPacket=true;
+     if(!scannerIdentified){scannerIdentified=true;status('Live BLE packets received. Older scanner firmware detected; decoding now.','ok');}
+     addLines(line);
+    }
+   }
   }
- }catch(err){status(`USB error: ${err.message||err}`, 'warn');}
- finally{
-  if(reader){try{reader.releaseLock()}catch{}reader=null}
-  if(port){try{await port.close()}catch{}port=null}
+ }catch(err){
+  status('Live scan could not start: '+String(err.message||err)+'. Choose the correct ESP32 USB port and install SHWM scanner firmware from Step 1.','warn');
+ }finally{
+  if(timeoutId!==null)clearTimeout(timeoutId);
+  const stoppedByUser=stop;
+  if(reader){try{reader.releaseLock()}catch{}reader=null;}
+  if(port){try{await port.close()}catch{}port=null;}
   stop=false;setLiveButton(false);
+  if(stoppedByUser)status('BLE scan stopped. Click Scan nearby BLE to start again.');
  }
 }
 $('#connect').addEventListener('click',connectSerial);
-$('#demo').addEventListener('click',()=>{selected=sample.mac;lastSelectionStatus='';accept(sample);status('LC026 example loaded (sample data, not a live measurement). Continue to Step 3.','ok');});
 $('#import').addEventListener('click',()=>{const n=parseTextInput($('#capture').value);status(n?`${n} scanner messages imported. Select a device below.`:'No valid SHWM Scanner JSON lines found. Check the data format.',n?'ok':'warn');});
 $('#make-yaml').addEventListener('click',()=>{
  const d=byMac.get(selected),b=getBoard($('#board').value);
@@ -171,7 +231,7 @@ function updateBoardWarning(){
  $('#board-confirm').textContent=b?b.label:'the board selected in Step 1';
  $('#board-warning').textContent=b?'Selected: '+b.label+' ('+b.chipFamily+', '+b.usb+'). Confirm the hardware and USB port before flashing.':'Choose your exact board first.';
  $('#board-note').textContent=b
-   ? b.scanner?'Scanner installer available for '+b.label+'. You can scan via USB and generate verified LC026 YAML.':'YAML preview only for '+b.label+'. There is no tested one-click BLE scanner for this model; use a compatible capture or the example instead.'
+   ? b.scanner?'Scanner installer available for '+b.label+'. You can scan via USB and generate verified LC026 YAML.':'YAML preview only for '+b.label+'. There is no tested one-click BLE scanner for this model; use a supported ESP32 scanner or import a compatible capture instead.'
    : 'Select a board to continue.';
 }
 async function verifySelectedFirmware(){
@@ -179,7 +239,7 @@ async function verifySelectedFirmware(){
  const b=getBoard($('#board').value);
  const wrapper=$('#install-wrapper');
  wrapper.hidden=true;
- if(!b||!b.scanner){$('#firmware-notice').textContent='No one-click BLE Scanner for this board. You may still preview the verified LC026 YAML using the example or imported readings.';return;}
+ if(!b||!b.scanner){$('#firmware-notice').textContent='No one-click BLE Scanner for this board. You may still preview the verified LC026 YAML using imported BLE recordings (live scanning needs a supported ESP32).';return;}
  if(!window.isSecureContext){$('#firmware-notice').textContent='Open this tool over HTTPS to enable USB firmware flashing.';return;}
  const path='./firmware/manifests/'+b.id+'.json';
  $('#flash-tool').setAttribute('manifest',path);
