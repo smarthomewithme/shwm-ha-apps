@@ -1,9 +1,12 @@
-import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML, BOARD_CATALOG, getBoard, SCANNER_BOARDS, summarizeDecoded } from './core.mjs?v=0.5.1-20261025';
+import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML, BOARD_CATALOG, getBoard, SCANNER_BOARDS, summarizeDecoded } from './core.mjs?v=0.5.2-20261025';
 
 const $ = selector => document.querySelector(selector);
 const byMac = new Map();
 let port=null, reader=null, stop=false, moduleDecoder=null, selected='', packetCount=0, pendingRender=null;
 let flashCheckSeq=0, lastShownMac='', lastSelectionStatus='';
+const HISTORY_LIMIT=300, HISTORY_MIN_INTERVAL_MS=4000, VIEW_REFRESH_MS=1100;
+const history=[];
+let viewPaused=false, lastPacketAt=null;
 const status=(str, kind='info')=>{$('#status').textContent=str;$('#status').dataset.kind=kind;};
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const setLiveButton=(live)=>{$('#connect').textContent=live?'Stop scanning':'Scan nearby BLE';};
@@ -16,7 +19,7 @@ async function initTheengs(){
     if(typeof factory!=='function') throw new Error('Theengs WASM factory unavailable');
     const runtime=await factory({ locateFile:(file)=>new URL(`./vendor/${file}`,import.meta.url).href });
     moduleDecoder=new runtime.TheengsDecoder();
-    $('#engine').textContent='Theengs WASM ready + SHWM LC026';
+    $('#engine').textContent='Theengs WASM v2.4.5 ready + SHWM LC026';
   } catch(e) {
     $('#engine').textContent='Theengs WASM unavailable — SHWM LC026 decoder only';
     $('#engine').title=String(e.message||e);
@@ -31,35 +34,94 @@ function decodeWithTheengs(frame) {
   } catch {return null;}
 }
 function accept(obj) {
-  const frame=normalizeAdvertisement(obj);if(!frame)return;
-  packetCount++;
-  const previous=byMac.get(frame.mac); const lc=decodeLC026(frame); const theengs=decodeWithTheengs(frame);
-  const record={frame,count:(previous?.count||0)+1,lc:lc||previous?.lc||null,
-   theengs:theengs||previous?.theengs||null,updated:new Date()};
-  if(byMac.size>=150&&!byMac.has(frame.mac))byMac.delete(byMac.keys().next().value);
-  byMac.set(frame.mac,record);
-  if(!selected && lc?.stable) selected=frame.mac; // Auto-select verified scale for beginners.
-  if(pendingRender===null) pendingRender=setTimeout(()=>{pendingRender=null;render();},140);
+ const frame=normalizeAdvertisement(obj);if(!frame)return;
+ packetCount++;
+ const now=new Date();
+ lastPacketAt=now;
+ const previous=byMac.get(frame.mac);
+ const lc=decodeLC026(frame), theengs=decodeWithTheengs(frame);
+ const record={
+  frame, count:(previous?.count||0)+1,
+  lc:lc||previous?.lc||null, theengs:theengs||previous?.theengs||null,
+  firstSeen:previous?.firstSeen||now, updated:now,
+  historyAt:previous?.historyAt||0, historySignature:previous?.historySignature||''
+ };
+ const signature=record.lc
+  ? 'lc:'+record.lc.weight_kg+':'+record.lc.stable
+  : record.theengs?'decoded:'+JSON.stringify(record.theengs)
+   :'raw:'+frame.manufacturerdata+':'+frame.servicedata+':'+frame.servicedatauuid+':'+frame.name;
+ // History stores the first sighting and material changes, not thousands of duplicate beacons.
+ const timestamp=now.getTime();
+ if(!previous || (timestamp-record.historyAt>=HISTORY_MIN_INTERVAL_MS && signature!==record.historySignature)){
+  history.push({time:now.toISOString(),mac:frame.mac,name:frame.name,rssi:frame.rssi,
+   reading:summarizeDecoded(record.theengs,record.lc),frame,
+   decoded:{shwm_lc026:record.lc,theengs:record.theengs}});
+  if(history.length>HISTORY_LIMIT)history.splice(0,history.length-HISTORY_LIMIT);
+  record.historyAt=timestamp;record.historySignature=signature;
+ }
+ if(byMac.size>=300&&!byMac.has(frame.mac))byMac.delete(byMac.keys().next().value);
+ byMac.set(frame.mac,record);
+ if(!viewPaused && pendingRender===null) pendingRender=setTimeout(()=>{pendingRender=null;render();},VIEW_REFRESH_MS);
+}
+function renderHistory(){
+ const host=$('#history');
+ if(!history.length){
+  host.innerHTML='<tr><td colspan="4">No events recorded yet. Start a scan or import saved scanner data.</td></tr>';
+  return;
+ }
+ // Oldest first: new events append below instead of pushing existing rows down.
+ host.innerHTML=history.map(item=>
+  '<tr><td>'+escape(new Date(item.time).toLocaleTimeString())+'</td>'+
+  '<td>'+escape(item.name||'Unnamed device')+' <small>'+escape(item.mac)+'</small></td>'+
+  '<td>'+escape(item.rssi)+'</td><td>'+escape(item.reading)+'</td></tr>'
+ ).join('');
 }
 function render(){
  const host=$('#devices');
  const recognized=[...byMac.values()].filter(v=>v.lc||v.theengs).length;
  $('#rx-count').textContent=String(packetCount);
  $('#known-count').textContent=String(recognized);
- $('#last-packet').textContent=packetCount?'latest '+new Date().toLocaleTimeString():'waiting for BLE advertisements';
+ $('#last-packet').textContent=lastPacketAt?'latest '+lastPacketAt.toLocaleTimeString():'waiting for BLE advertisements';
+ $('#history-count').textContent=String(history.length);
+ if($('#history-panel').open)renderHistory();
+ // Once a device appears, its row stays in first-seen order even when RSSI updates rapidly.
  const items=[...byMac.values()].filter(x=>!$('#recognized-only').checked||x.lc||x.theengs)
-   .sort((a,b)=>b.updated-a.updated).slice(0,150);
- if(!items.length){host.innerHTML='<tr><td colspan="6">No live BLE devices yet. Click Scan nearby BLE, select the ESP32 port and wake your device; advanced filters may hide unknown devices.</td></tr>';return;}
+  .sort((a,b)=>a.firstSeen-b.firstSeen).slice(0,300);
+ if(!items.length){host.innerHTML='<tr><td colspan="6">No BLE devices yet. Start a scan and wake your device; advanced filters may hide unknown devices.</td></tr>';return;}
  host.innerHTML=items.map(item=>{
-  const x=item.frame;
-  const summary=summarizeDecoded(item.theengs,item.lc);
-  const last=item.updated.toLocaleTimeString();
-  return `<tr><td><button type="button" data-mac="${escape(x.mac)}">Select</button> <small>${escape(x.mac)}</small></td>`+
-    `<td>${escape(x.name||'—')}</td><td>${escape(x.rssi)}</td><td>${escape(summary)}</td><td>${item.count}</td><td>${escape(last)}</td></tr>`;
+  const x=item.frame, summary=summarizeDecoded(item.theengs,item.lc);
+  return '<tr><td><button type="button" data-mac="'+escape(x.mac)+'">Select</button> <small>'+escape(x.mac)+'</small></td>'+
+   '<td>'+escape(x.name||'—')+'</td><td>'+escape(x.rssi)+'</td><td>'+escape(summary)+'</td><td>'+item.count+'</td><td>'+escape(item.updated.toLocaleTimeString())+'</td></tr>';
  }).join('');
  [...host.querySelectorAll('[data-mac]')].forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.mac;showSelection();}));
  if(selected)showSelection();
 }
+$('#history-panel').addEventListener('toggle',()=>{
+ if($('#history-panel').open)renderHistory();
+});
+$('#pause-view').addEventListener('click',()=>{
+ viewPaused=!viewPaused;
+ if(viewPaused && pendingRender!==null){clearTimeout(pendingRender);pendingRender=null;}
+ const button=$('#pause-view');
+ button.textContent=viewPaused?'Resume display':'Pause display';
+ button.setAttribute('aria-pressed',String(viewPaused));
+ $('#view-mode').textContent=viewPaused
+  ? 'Display paused. BLE capture and history continue in memory.'
+  : 'List refresh: ~1 second. Capturing every received packet.';
+ if(!viewPaused){if(pendingRender!==null){clearTimeout(pendingRender);pendingRender=null;}render();}
+});
+$('#history-clear').addEventListener('click',()=>{
+ history.length=0;
+ if(!viewPaused)render();
+ else {$('#history-count').textContent='0';renderHistory();}
+});
+$('#history-download').addEventListener('click',()=>{
+ if(!history.length){status('No history to download yet. Scan or import BLE packets first.','warn');return;}
+ const body=JSON.stringify({format:'SHWM-BLE-history',version:'0.5.2',exported_at:new Date().toISOString(),events:history},null,2);
+ const url=URL.createObjectURL(new Blob([body],{type:'application/json;charset=utf-8'}));
+ const link=document.createElement('a');link.href=url;link.download='shwm-ble-history.json';link.click();
+ setTimeout(()=>URL.revokeObjectURL(url),3000);
+});
 $('#recognized-only').addEventListener('change',render);
 function showSelection(){
  const r=byMac.get(selected); if(!r)return;
@@ -118,7 +180,8 @@ async function connectSerial(){
   port=await navigator.serial.requestPort();
   await port.open({baudRate:115200});
   stop=false;
-  byMac.clear();selected='';packetCount=0;lastShownMac='';lastSelectionStatus='';
+  // Keep previously seen devices and local history until the page is reloaded.
+  selected='';lastShownMac='';lastSelectionStatus='';
   $('#raw').textContent='No device selected';$('#decoded').textContent='No device selected';
   $('#selected').textContent='Waiting for a live BLE device';
   $('#reading').textContent='Waiting for nearby BLE advertisements…';

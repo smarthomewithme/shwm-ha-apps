@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/shwm-ble-usb-installer
+      - feat/ble-stable-list-history-20261025
       - fix/ble-board-selector-fallback-20261025
       - fix/ble-live-scan-step2-20261025
   workflow_dispatch:

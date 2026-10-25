@@ -13,7 +13,7 @@ test('live BLE scanning uses a verified scanner firmware instead of example data
  assert.match(js,/sendSerialCommand\('SCAN'\)/);
  assert.match(js,/obj\.firmware!=='SHWM BLE USB Scanner'/);
  assert.match(js,/if\(frame&&!frame\.hello\)/);
- assert.match(js,/if\(!selected && lc\?\.stable\) selected=frame\.mac/);
+ assert.doesNotMatch(js,/if\(!selected && lc\?\.stable\) selected=frame\.mac/);
  assert.match(js,/if\(!d\?\.lc\?\.stable\|\|!b\)/);
  assert.match(html,/only the independently validated LC026 scale profile/i);
 });
@@ -37,7 +37,24 @@ test('all ESP32 board choices are present before JavaScript executes',()=>{
  assert.deepEqual(new Set(options),new Set(catalog.map(b=>b.id)));
  assert.match(html,/<option value="esp32dev" selected>/);
  assert.match(html,/<strong>My ESP32 board:<\/strong>/);
- assert.match(html,/app\.mjs\?v=0\.5\.1-20261025/);
- assert.match(js,/core\.mjs\?v=0\.5\.1-20261025/);
+ assert.match(html,/app\.mjs\?v=0\.5\.2-20261025/);
+ assert.match(js,/core\.mjs\?v=0\.5\.2-20261025/);
  assert.match(js,/Scanner app initialization failed/);
+});
+
+test('scanner stays generic; stable device list with bounded history',()=>{
+ const step2=html.slice(html.indexOf('<section id="read-bluetooth"'),html.indexOf('<section id="generate-yaml"'));
+ assert.doesNotMatch(step2,/stable LC026 weight is selected automatically|try LC026 example/i);
+ assert.match(step2,/id="pause-view"/);
+ assert.match(step2,/id="history-panel"/);
+ assert.match(step2,/id="history-download"/);
+ assert.match(step2,/id="history-clear"/);
+ assert.match(js,/VIEW_REFRESH_MS=1100/);
+ assert.match(js,/HISTORY_LIMIT=300/);
+ assert.match(js,/\.sort\(\(a,b\)=>a\.firstSeen-b\.firstSeen\)/);
+ assert.doesNotMatch(js,/\.sort\(\(a,b\)=>b\.updated-a\.updated\)/);
+ assert.match(js,/!viewPaused && pendingRender===null/);
+ assert.match(js,/if\(!previous \|\| \(timestamp-record\.historyAt>=HISTORY_MIN_INTERVAL_MS/);
+ assert.match(js,/events:history/);
+ assert.match(js,/Theengs WASM v2\.4\.5 ready/);
 });

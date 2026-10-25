@@ -74,3 +74,13 @@ Adafruit Feather ESP32-S3 is temporarily YAML-preview only under pinned Platform
 ## v0.5 change awaiting hardware verification
 
 The Scan button requires the temporary SHWM scanner firmware on a supported ESP32 connected over USB. A normal ESPHome image, even with `esp32_ble_tracker`, only publishes ESPHome API data and cannot directly feed this Web Serial JSONL UI. The v0.5 firmware waits for a SCAN command, emits a verified hello and scan_state acknowledgement, and stops on STOP. Legacy v0.2 scanners with continuous advertisements remain displayable. Browser Web Bluetooth general advertisement scanning is experimental/limited and is not claimed. Firmware must pass CI compilation and be tested on a real ESP32 before merge/deployment or updating WordPress post 926. Do not publish a sample as live data.
+
+## v0.5.2 generic scanner UX: readable results and local history
+
+The Step 2 text is intentionally device-neutral. The LC026 scale is a verified **example/profile** explained in the WordPress article and protected YAML path, not a universal assumption of the scanner. Stable LC026 measurements are no longer auto-selected.
+
+The device list preserves **first-seen order** instead of jumping to the top after every advertisement. UI rendering occurs about once per 1.1 seconds, without slowing the radio scan or discarding packets. The user may pause the display while capture/decoding continue, then resume to catch up.
+
+A collapsed history panel records the first sighting of each MAC and changed payloads or readings (minimum 4 seconds per MAC for changes), capped at 300 events in page memory. The history can be exported as local JSON, including captured RAW data and the decoded snapshot. It is never uploaded; it resets when the browser tab reloads, or when explicitly cleared. Bluetooth addresses in an exported file can be identifying.
+
+The bundled Theengs WASM is pinned to **v2.4.5** and decodes its supported BLE advertisement protocols; unknown packets remain RAW, generic GATT reading and encrypted device decoding are unsupported. Linking to external projects such as openScale is not equivalent to importing their entire protocol databases. Full returned Theengs objects remain visible in Step 3 Advanced > Decoded; the device-row summary is abbreviated. No new BLE protocol claims or device-specific ESPHome YAML templates are added by this UI update.
