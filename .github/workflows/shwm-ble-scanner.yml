@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/shwm-ble-usb-installer
+      - fix/ble-live-scan-step2-20261025
   workflow_dispatch:
 permissions:
   contents: read
