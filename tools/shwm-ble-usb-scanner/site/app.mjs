@@ -19,7 +19,7 @@ async function initTheengs(){
     if(typeof factory!=='function') throw new Error('Theengs WASM factory unavailable');
     const runtime=await factory({ locateFile:(file)=>new URL(`./vendor/${file}`,import.meta.url).href });
     moduleDecoder=new runtime.TheengsDecoder();
-    $('#engine').textContent='Theengs WASM ready + SHWM LC026';
+    $('#engine').textContent='Theengs WASM v2.4.5 ready + SHWM LC026';
   } catch(e) {
     $('#engine').textContent='Theengs WASM unavailable — SHWM LC026 decoder only';
     $('#engine').title=String(e.message||e);
@@ -97,10 +97,11 @@ function render(){
  if(selected)showSelection();
 }
 $('#history-panel').addEventListener('toggle',()=>{
- if($('#history-panel').open && !viewPaused)renderHistory();
+ if($('#history-panel').open)renderHistory();
 });
 $('#pause-view').addEventListener('click',()=>{
  viewPaused=!viewPaused;
+ if(viewPaused && pendingRender!==null){clearTimeout(pendingRender);pendingRender=null;}
  const button=$('#pause-view');
  button.textContent=viewPaused?'Resume display':'Pause display';
  button.setAttribute('aria-pressed',String(viewPaused));
