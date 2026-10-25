@@ -1,12 +1,12 @@
-# Smart Home With Me BLE USB Scanner + ESPHome Generator v0.3
+# Smart Home With Me BLE USB Scanner + ESPHome Generator v0.5 (draft)
 
-GPL-3.0-or-later source, **release candidate** (compiled, not hardware-tested or published).
+GPL-3.0-or-later source, **v0.5 proposed change**. No hardware-tested v0.5 binaries have been built or published yet. Do not promise browser Bluetooth adapter scans; the supported path is ESP32 BLE → USB Web Serial.
 
 ## What users will do
 
 1. Plug a **supported ESP32** from the six-board catalog below into a computer using a USB data cable.
 2. On the HTTPS-hosted generator, click **Install BLE Scanner on ESP32**. This uses ESP Web Tools, asks for an explicit user port choice and flashes a pre-built scanner. On first installation this **replaces any old firmware**; back up first.
-3. Reconnect the USB cable/serial port if necessary; click **Connect and scan live** and select the port. The ESP32 emits BLE advertisement **JSON lines at 115200 baud** via Web Serial. Data is decoded locally.
+3. Reconnect USB/serial if necessary; click **Scan nearby BLE** and select the ESP32 port. The web app verifies the scanner firmware greeting and sends `SCAN`; the ESP32 then emits real BLE advertisement **JSON lines at 115200 baud** via Web Serial. Click **Stop scanning** to send `STOP`. Standard ESPHome firmware does **not** emit this protocol. Data is decoded locally.
 4. Theengs browser WASM (GPL-3.0) identifies supported advertising formats. The SHWM LC026 reference profile provides validated weight readings, and is currently the **only profile with a YAML generator**. Other Theengs results are displayed but not fabricated into ESPHome templates.
 5. Copy **ESPHome YAML**, use ESPHome Device Builder to **validate and compile**, then flash the compiled firmware to the SAME ESP32 (this **overwrites the temporary scanner**) via USB / ESPHome Web. Add ESPHome device to Home Assistant.
 
@@ -14,7 +14,7 @@ GPL-3.0-or-later source, **release candidate** (compiled, not hardware-tested or
 
 ## What is actually built here
 
-- Functional web interface in `site/index.html`, `site/app.mjs`, `site/core.mjs`: Web Serial live JSONL capture, device grouping, Theengs integration hook, SHWM LC026 decoding, safe YAML generator, clipboard/download. DOM interaction smoke-tested in local Chromium with simulated LC026 data; official Theengs WASM tested in both Chromium and Node.js. No real ESP32 attached here.
+- Functional web interface in `site/index.html`, `site/app.mjs`, `site/core.mjs`: explicit live USB Scan/Stop, scanner firmware handshake and missing-data diagnosis, Web Serial JSONL capture, device grouping, Theengs integration, SHWM LC026 decoding, safe YAML generator, clipboard/download. Example button removed from primary workflow. DOM interaction smoke-tested in local Chromium with simulated LC026 data; official Theengs WASM tested in both Chromium and Node.js. No real ESP32 attached here.
 - Native ESP32 NimBLE scanner firmware source at `scanner/src/main.cpp` (no Wi-Fi, no vendor cloud), PlatformIO configs for six ESP32 boards across three BLE-capable chip families.
 - ESP Web Tools installer button with per-board manifests `site/firmware/manifests/<board-id>.json`; button stays hidden/disabled until firmware images are deployed.
 - GitHub Actions workflows that build and merge both firmware images and build the official Theengs WebAssembly module directly from the pinned upstream GPL source; a standalone HTTPS host or GitHub Pages deployment can be configured after review.
@@ -70,3 +70,7 @@ On successful deployment, confirm the URL from the **Actions deploy job output**
 - Flashing overwrites a board's existing firmware; use a spare ESP32. No physical testing of the new models has been performed by this code-only workflow.
 
 Adafruit Feather ESP32-S3 is temporarily YAML-preview only under pinned PlatformIO 6.9.0: its 2026-10-21 CI compilation did not emit the `bootloader.bin` required for a safe merged installer image. The other 22 scanner targets emitted their own bootloader files in the CI build logs. Never substitute an unrelated bootloader.
+
+## v0.5 change awaiting hardware verification
+
+The Scan button requires the temporary SHWM scanner firmware on a supported ESP32 connected over USB. A normal ESPHome image, even with `esp32_ble_tracker`, only publishes ESPHome API data and cannot directly feed this Web Serial JSONL UI. The v0.5 firmware waits for a SCAN command, emits a verified hello and scan_state acknowledgement, and stops on STOP. Legacy v0.2 scanners with continuous advertisements remain displayable. Browser Web Bluetooth general advertisement scanning is experimental/limited and is not claimed. Firmware must pass CI compilation and be tested on a real ESP32 before merge/deployment or updating WordPress post 926. Do not publish a sample as live data.
