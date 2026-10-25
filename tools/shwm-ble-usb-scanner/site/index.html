@@ -6,7 +6,7 @@
 </style>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script></head>
 <body>
-<h1>Explore cheap Bluetooth devices <small>SHWM BLE Scanner &amp; ESPHome Generator v0.5.1</small></h1>
+<h1>Explore cheap Bluetooth devices <small>SHWM BLE Scanner &amp; ESPHome Generator v0.5.2</small></h1>
 <p>Discover advertisements from affordable Bluetooth scales, thermometers and other BLE gadgets — no vendor app or cloud account required for supported broadcasts. <strong>Recognizing a device is not the same as having ESPHome YAML:</strong> our LC026 scale is currently the only profile with independently verified YAML generation.</p>
 <p class="warning"><strong>Before flashing:</strong> the initial BLE Scanner replaces any firmware already on your ESP32. Back up an existing ESPHome configuration first. Use a spare board when possible. Only click Install on the correct USB device.</p>
 <section id="choose-board"><h2>Step 1 · Choose your ESP32 (one time)</h2>
@@ -73,11 +73,17 @@
 <p class="step-note"><strong>Warning:</strong> installing the scanner replaces any firmware already on your ESP32. Back up first or use a spare board. If your model is “YAML preview only”, use a supported ESP32 for live scanning or import a compatible scan rather than attempting an unsupported installation.</p>
 </section>
 <section id="read-bluetooth"><h2>Step 2 · Scan nearby Bluetooth devices</h2>
-<p><strong>Live scan:</strong> install the temporary SHWM BLE Scanner firmware from Step 1, connect that ESP32 via USB, then click <strong>Scan nearby BLE</strong> and choose its COM port. Step on your scale to wake it. Devices and decoded measurements will appear below as packets arrive. <strong>Normal ESPHome firmware does not send scanner JSON data</strong>; this website cannot read an ESPHome sensor automatically.</p>
+<p><strong>Live scan:</strong> install the temporary SHWM BLE Scanner firmware from Step 1, connect your ESP32 via USB, then click <strong>Scan nearby BLE</strong> and select its COM port. Wake your Bluetooth device to make it advertise. Devices and supported decoded measurements appear below. <strong>Normal ESPHome firmware does not send scanner JSON data</strong>; this website cannot read ESPHome sensors automatically.</p>
 <div class="action-row"><button type="button" id="connect">Scan nearby BLE</button></div>
 <p id="status" role="status">Ready to scan. Requires an ESP32 with temporary SHWM scanner firmware and USB cable.</p>
-<p class="step-note"><strong>Live results:</strong> devices appear when BLE packets arrive. Click <strong>Select</strong> to inspect one; a stable LC026 weight is selected automatically. If nothing appears, verify scanner firmware and USB connection rather than loading sample data.</p>
+<p class="step-note"><strong>Live results:</strong> new devices are added to the bottom of a stable list. Measurements refresh roughly once per second; BLE capture continues at full speed. Click <strong>Select</strong> to view a device. No devices? Check the scanner firmware, USB port and whether your gadget is advertising.</p>
+<div class="action-row"><button type="button" id="pause-view" aria-pressed="false">Pause display</button><small id="view-mode" class="muted" role="status">List refresh: ~1 second. Capturing every received packet.</small></div>
 <div class="table-wrap"><table><thead><tr><th>Choose</th><th>Device name</th><th>Signal</th><th>Reading</th><th>Packets</th><th>Last seen</th></tr></thead><tbody id="devices"></tbody></table></div>
+<details id="history-panel"><summary>Scan history (<span id="history-count">0</span> events)</summary>
+<p class="muted"><small>First appearance and significant changed messages, oldest first. At most 300 records are retained in this browser tab; no data is uploaded. A history record may include a Bluetooth address.</small></p>
+<div class="action-row"><button type="button" id="history-download">Download history JSON</button><button type="button" id="history-clear">Clear history</button></div>
+<div class="table-wrap" style="max-height:360px;overflow:auto"><table><thead><tr><th>Time</th><th>Device</th><th>Signal</th><th>Captured result</th></tr></thead><tbody id="history"></tbody></table></div>
+</details>
 <details><summary>No USB? Paste previously captured scanner data</summary><p>Copy JSON lines from the <strong>SHWM USB Scanner</strong> serial output and paste them below (one JSON object per line). Then click <strong>Read pasted data</strong>. You do <strong>not</strong> copy RAW into Decoded — both are automatically displayed in Step 3.</p><textarea id="capture" aria-label="Paste SHWM scanner JSON lines"></textarea><button type="button" id="import">Read pasted data</button></details>
 <details><summary>Advanced: scanner status and filters</summary><p><small>Decoder engine: <span id="engine">Loading…</span></small></p><p class="muted">Received <span id="rx-count">0</span> packets; recognized devices: <span id="known-count">0</span>; <span id="last-packet">waiting for BLE advertisements</span>.</p><p><label><input id="recognized-only" type="checkbox"> Hide unrecognized devices</label></p></details>
 </section>
@@ -101,5 +107,5 @@
 <p class="warning"><strong>Remember:</strong> installing ESPHome replaces the temporary scanner. ESPHome Web does not compile YAML; compilation happens in Device Builder. Choosing an ESP32 board alone cannot generate code for unknown Bluetooth devices.</p>
 </section>
 <footer class="muted"><small>GPL-3.0-or-later · Decoder: Theengs (GPL-3.0), original sources credited in THIRD_PARTY.md · No cloud uploads · No original device app needed · Bluetooth LE advertising only; GATT devices require future support.</small></footer>
-<script type="module" src="./app.mjs?v=0.5.1-20261025"></script>
+<script type="module" src="./app.mjs?v=0.5.2-20261025"></script>
 </body></html>
