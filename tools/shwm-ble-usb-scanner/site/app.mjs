@@ -1,4 +1,4 @@
-import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML, BOARD_CATALOG, getBoard, SCANNER_BOARDS, summarizeDecoded } from './core.mjs';
+import { normalizeAdvertisement, decodeLC026, parseLine, toTheengs, espHomeScaleYAML, BOARD_CATALOG, getBoard, SCANNER_BOARDS, summarizeDecoded } from './core.mjs?v=0.5.1-20261025';
 
 const $ = selector => document.querySelector(selector);
 const byMac = new Map();
@@ -273,7 +273,17 @@ async function verifySelectedFirmware(){
    $('#firmware-notice').textContent='Installer disabled: '+String(err.message||err)+'. Run the CI build and deploy its exact firmware files first.';
  }
 }
-initializeBoardSelectors();
-void verifySelectedFirmware();
-initTheengs();
-render();
+// Progressive enhancement: the board dropdown is already populated in HTML.
+// If module initialization fails, keep every board selectable and show a clear error.
+try {
+ initializeBoardSelectors();
+ void verifySelectedFirmware();
+ void initTheengs();
+ render();
+} catch(err) {
+ const boardNote=$('#board-note');
+ if(boardNote) boardNote.textContent='Scanner app initialization failed: '+String(err?.message||err)+'. The board list remains available. Reload or open the full generator in a new tab.';
+ const firmwareNote=$('#firmware-notice');
+ if(firmwareNote) firmwareNote.textContent='Scanner controls unavailable until the app finishes initializing.';
+ console.error('SHWM BLE app initialization failure',err);
+}
