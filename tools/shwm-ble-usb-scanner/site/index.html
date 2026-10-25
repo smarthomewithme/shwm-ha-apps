@@ -6,15 +6,67 @@
 </style>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script></head>
 <body>
-<h1>Explore cheap Bluetooth devices <small>SHWM BLE Scanner &amp; ESPHome Generator v0.5</small></h1>
+<h1>Explore cheap Bluetooth devices <small>SHWM BLE Scanner &amp; ESPHome Generator v0.5.1</small></h1>
 <p>Discover advertisements from affordable Bluetooth scales, thermometers and other BLE gadgets — no vendor app or cloud account required for supported broadcasts. <strong>Recognizing a device is not the same as having ESPHome YAML:</strong> our LC026 scale is currently the only profile with independently verified YAML generation.</p>
 <p class="warning"><strong>Before flashing:</strong> the initial BLE Scanner replaces any firmware already on your ESP32. Back up an existing ESPHome configuration first. Use a spare board when possible. Only click Install on the correct USB device.</p>
 <section id="choose-board"><h2>Step 1 · Choose your ESP32 (one time)</h2>
 <p>Select the board you own, e.g. <strong>ESP32 DevKit / WROOM-32</strong>. This same selection is used for the temporary scanner AND the final ESPHome YAML.</p>
 <p><label for="board-search">Find your model (optional):</label><br><input id="board-search" type="search" placeholder="WROOM, XIAO, ESP32-S3…" autocomplete="off" style="max-width:100%;width:400px"><small id="board-search-status">Type to search.</small></p>
-<p><label for="board"><strong>My ESP32 board:</strong></label><br><select id="board" aria-label="ESP32 model used for scanner and final ESPHome YAML"></select></p>
+<p><label for="board"><strong>My ESP32 board:</strong></label><br><select id="board" name="shwm-esp32-board" aria-label="ESP32 model used for scanner and final ESPHome YAML" style="display:block;max-width:100%;width:580px;min-height:44px">
+<optgroup label="ESP32">
+<option value="esp32dev" selected>ESP32 DevKit / WROOM-32 [scanner + YAML]</option>
+<option value="nodemcu-32s">NodeMCU-32S [scanner + YAML]</option>
+<option value="esp32doit-devkit-v1">DOIT ESP32 DevKit V1 [scanner + YAML]</option>
+<option value="lolin32">Wemos LOLIN32 [scanner + YAML]</option>
+<option value="wemos_d1_mini32">Wemos D1 Mini ESP32 [scanner + YAML]</option>
+<option value="pico32">Espressif ESP32 PICO Kit [scanner + YAML]</option>
+<option value="esp-wrover-kit">ESP-WROVER-KIT [scanner + YAML]</option>
+<option value="m5stack-atom">M5Stack ATOM (ESP32) [scanner + YAML]</option>
+<option value="tinypico">Unexpected Maker TinyPICO [scanner + YAML]</option>
+<option value="adafruit_feather_esp32_v2">Adafruit Feather ESP32 V2 [scanner + YAML]</option>
+<option value="adafruit_itsybitsy_esp32">Adafruit ItsyBitsy ESP32 [YAML preview only]</option>
+<option value="adafruit_qtpy_esp32">Adafruit QT Py ESP32 [YAML preview only]</option>
+<option value="esp32thing_plus">SparkFun ESP32 Thing Plus [YAML preview only]</option>
+<option value="firebeetle32">DFRobot FireBeetle ESP32 [YAML preview only]</option>
+<option value="lolin_d32">Wemos LOLIN D32 [YAML preview only]</option>
+<option value="lolin_d32_pro">Wemos LOLIN D32 Pro [YAML preview only]</option>
+<option value="esp32-poe">Olimex ESP32-POE [YAML preview only]</option>
+<option value="esp32-poe-iso">Olimex ESP32-POE-ISO [YAML preview only]</option>
+<option value="heltec_wifi_kit_32">Heltec WiFi Kit 32 [YAML preview only]</option>
+<option value="m5stack-core2">M5Stack Core2 [YAML preview only]</option>
+<option value="ttgo-t-beam">LILYGO TTGO T-Beam [YAML preview only]</option>
+</optgroup>
+<optgroup label="ESP32-C3">
+<option value="esp32-c3-devkitm-1">ESP32-C3 DevKitM-1 [scanner + YAML]</option>
+<option value="esp32-c3-devkitc-02">ESP32-C3 DevKitC-02 [scanner + YAML]</option>
+<option value="seeed_xiao_esp32c3">Seeed XIAO ESP32-C3 [scanner + YAML]</option>
+<option value="lolin_c3_mini">Wemos LOLIN C3 Mini [scanner + YAML]</option>
+<option value="adafruit_qtpy_esp32c3">Adafruit QT Py ESP32-C3 [scanner + YAML]</option>
+<option value="dfrobot_beetle_esp32c3">DFRobot Beetle ESP32-C3 [scanner + YAML]</option>
+<option value="weactstudio_esp32c3coreboard">WeAct ESP32-C3 CoreBoard [YAML preview only]</option>
+<option value="airm2m_core_esp32c3">AirM2M ESP32-C3 Core [YAML preview only]</option>
+<option value="esp32-c3-m1i-kit">ESP32-C3-M1I Kit [YAML preview only]</option>
+</optgroup>
+<optgroup label="ESP32-S3">
+<option value="esp32-s3-devkitc-1">ESP32-S3 DevKitC-1 [scanner + YAML]</option>
+<option value="esp32-s3-devkitm-1">ESP32-S3 DevKitM-1 [scanner + YAML]</option>
+<option value="seeed_xiao_esp32s3">Seeed XIAO ESP32-S3 [scanner + YAML]</option>
+<option value="lolin_s3_mini">Wemos LOLIN S3 Mini [scanner + YAML]</option>
+<option value="adafruit_feather_esp32s3">Adafruit Feather ESP32-S3 [YAML preview only]</option>
+<option value="lilygo-t-display-s3">LILYGO T-Display S3 [scanner + YAML]</option>
+<option value="um_tinys3">Unexpected Maker TinyS3 [scanner + YAML]</option>
+<option value="adafruit_qtpy_esp32s3_n4r2">Adafruit QT Py ESP32-S3 N4R2 [YAML preview only]</option>
+<option value="arduino_nano_esp32">Arduino Nano ESP32 [YAML preview only]</option>
+<option value="m5stack-atoms3">M5Stack ATOM S3 [YAML preview only]</option>
+<option value="m5stack-cores3">M5Stack CoreS3 [YAML preview only]</option>
+<option value="lolin_s3">Wemos LOLIN S3 [YAML preview only]</option>
+<option value="adafruit_metro_esp32s3">Adafruit Metro ESP32-S3 [YAML preview only]</option>
+<option value="dfrobot_firebeetle2_esp32s3">DFRobot FireBeetle 2 ESP32-S3 [YAML preview only]</option>
+<option value="m5stack-stamps3">M5Stack StampS3 [YAML preview only]</option>
+</optgroup>
+</select></p>
 <p class="muted"><small><span id="board-catalog-count">…</span> ESP32 models listed; <span id="board-scan-count">…</span> have ready-to-install scanners.</small></p>
-<p class="notice" id="board-note" role="status">Choose a board to continue.</p>
+<p class="notice" id="board-note" role="status">Board list loaded. Initializing scanner controls… If this message stays, reload the page or open the full generator tab (JavaScript is not running).</p>
 <p class="muted" id="board-warning">Check your ESP32 model and USB port.</p>
 <p class="notice" id="firmware-notice" role="status">Checking BLE Scanner firmware…</p>
 <div id="install-wrapper" hidden><esp-web-install-button id="flash-tool" manifest="./firmware/manifests/esp32dev.json"><button type="button" slot="activate">Install temporary BLE Scanner</button><span slot="unsupported">Use desktop Chrome or Edge with a USB data cable.</span></esp-web-install-button></div>
@@ -49,5 +101,5 @@
 <p class="warning"><strong>Remember:</strong> installing ESPHome replaces the temporary scanner. ESPHome Web does not compile YAML; compilation happens in Device Builder. Choosing an ESP32 board alone cannot generate code for unknown Bluetooth devices.</p>
 </section>
 <footer class="muted"><small>GPL-3.0-or-later · Decoder: Theengs (GPL-3.0), original sources credited in THIRD_PARTY.md · No cloud uploads · No original device app needed · Bluetooth LE advertising only; GATT devices require future support.</small></footer>
-<script type="module" src="./app.mjs"></script>
+<script type="module" src="./app.mjs?v=0.5.1-20261025"></script>
 </body></html>
