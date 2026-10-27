@@ -1,11 +1,21 @@
 # Smart Home With Me — Home Assistant Apps
 
-Public Home Assistant installation metadata for Smart Home With Me. Application source and GHCR runtime images are private.
+Public **Home Assistant distribution metadata only**. The SHWM Content Engine source code and its GHCR runtime image are private.
 
-- App manifest: `shwm_content_engine/config.yaml`
-- Runtime image: `ghcr.io/smarthomewithme/shwm-content-engine:<version>`
-- Current manifest release: `0.4.2-beta.183`
+- Current advertised version: `0.4.2-beta.183` (verified GHCR release, 2026-10-27).
+- App manifest: [`shwm_content_engine/config.yaml`](shwm_content_engine/config.yaml).
+- Runtime image: `ghcr.io/smarthomewithme/shwm-content-engine:<version>`.
 
-Home Assistant installations already using `#beta177-private-staging` retain that exact repository URL. This historical branch is kept as a compatibility pointer to the same release as `main`, to preserve the existing Home Assistant repository identity and app data.
+## One release channel, existing installations preserved
 
-Public metadata does not grant access to a private container image. Image pulls require an authorized registry configuration.
+`main` is the canonical metadata branch. **Existing installations subscribed to**:
+
+```text
+https://github.com/smarthomewithme/shwm-ha-apps#beta177-private-staging
+```
+
+must keep that URL until a separate, verified data migration. The historical branch is maintained as a compatibility pointer to the **same commit as `main`**. Changing the repository URL can change the Home Assistant repository/add-on identifier; existing app data does not automatically follow a new slug.
+
+The public manifest can advertise an update even if the private container cannot be downloaded. An anonymous GHCR pull is denied; the Home Assistant Supervisor must have authorized registry access. Do not add tokens to this repository. A version shown in the store is **not proof that the app was installed or updated**.
+
+See [release boundary](REPOSITORY_RELATIONSHIP.md).
