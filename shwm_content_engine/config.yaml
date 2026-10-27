@@ -1,17 +1,9 @@
-# REPOSITORY LINKAGE — IMPORTANT
-# This PUBLIC repo is the Home Assistant distribution/metadata repo:
-#   smarthomewithme/shwm-ha-apps
-# Application source/builds live in the PRIVATE repo:
-#   smarthomewithme/shwm-content-engine
-# Google Cloud Build validates and manually releases the versioned private GHCR staging image from the PRIVATE repo.
-# Update this public version only after the matching image is verified in GHCR.
-# GitHub Actions is not the active release or synchronization mechanism.
-name: SHWM Content Engine beta.182 — PRIVATE STAGING TEST
-version: "0.4.2-beta.182"
+name: SHWM Content Engine beta.183
+version: "0.4.2-beta.183"
 breaking_versions:
   - "0.4.2-beta.182"
 slug: shwm_content_engine
-description: Isolated beta.182 private GHCR staging; separate non-production HA only
+description: Smart Home With Me Content Engine; manual start; private runtime image
 url: https://smarthomewithme.com
 arch:
   - amd64
@@ -22,7 +14,7 @@ ingress: true
 ingress_port: 8099
 ingress_stream: true
 panel_icon: mdi:bullhorn
-panel_title: SHWM beta.182 STAGING TEST
+panel_title: SHWM Content Engine
 image: ghcr.io/smarthomewithme/shwm-content-engine
 options:
   ai_provider: auto
