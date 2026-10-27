@@ -1,20 +1,11 @@
-# Smart Home With Me - Home Assistant Apps
+# Smart Home With Me — Home Assistant Apps
 
-Home Assistant app repository for Smart Home With Me.
+Public Home Assistant installation metadata for Smart Home With Me. Application source and GHCR runtime images are private.
 
-Website: https://smarthomewithme.com  
-Contact: smarthomewithme@gmail.com
+- App manifest: `shwm_content_engine/config.yaml`
+- Runtime image: `ghcr.io/smarthomewithme/shwm-content-engine:<version>`
+- Current manifest release: `0.4.2-beta.183`
 
-## Repository relationship — IMPORTANT
+Home Assistant installations already using `#beta177-private-staging` retain that exact repository URL. This historical branch is kept as a compatibility pointer to the same release as `main`, to preserve the existing Home Assistant repository identity and app data.
 
-This public repository contains **Home Assistant distribution metadata only**. The application source code is maintained separately in the private repository:
-
-- public HA metadata/distribution: `smarthomewithme/shwm-ha-apps`
-- private source/build: `smarthomewithme/shwm-content-engine`
-- release image: `ghcr.io/smarthomewithme/shwm-content-engine:<version>`
-
-Home Assistant Supervisor should use this repository as the custom repository. The app manifest is `shwm_content_engine/config.yaml`.
-
-For every release, `version:` in that manifest must match the GHCR image version built by the private `shwm-content-engine` repository. If the image is updated but this manifest is not, Home Assistant will continue to show the old version and no update will appear.
-
-See [`REPOSITORY_RELATIONSHIP.md`](REPOSITORY_RELATIONSHIP.md) before changing release/version metadata.
+Public metadata does not grant access to a private container image. Image pulls require an authorized registry configuration.
