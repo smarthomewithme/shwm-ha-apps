@@ -1,5 +1,5 @@
-name: SHWM Content Engine beta.185
-version: "0.4.2-beta.185"
+name: SHWM Content Engine beta.186
+version: "0.4.2-beta.186"
 breaking_versions:
   - "0.4.2-beta.182"
 slug: shwm_content_engine
@@ -35,6 +35,7 @@ options:
   groups_wp_bridge_enabled: false
   groups_wp_bridge_site_url: ""
   groups_wp_bridge_key: ""
+  promotor_signed_commands_enabled: false
 schema:
   ai_provider: list(auto|template|openai_compatible|gemini)
   ai_base_url: url?
@@ -56,3 +57,4 @@ schema:
   groups_wp_bridge_enabled: bool
   groups_wp_bridge_site_url: str?
   groups_wp_bridge_key: password?
+  promotor_signed_commands_enabled: bool
