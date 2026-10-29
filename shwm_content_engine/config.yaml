@@ -1,5 +1,5 @@
-name: SHWM Content Engine beta.183
-version: "0.4.2-beta.183"
+name: SHWM Content Engine beta.184
+version: "0.4.2-beta.184"
 breaking_versions:
   - "0.4.2-beta.182"
 slug: shwm_content_engine
