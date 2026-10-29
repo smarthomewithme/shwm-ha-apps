@@ -2,7 +2,7 @@
 
 Public **Home Assistant distribution metadata only**. The SHWM Content Engine source code and its GHCR runtime image are private.
 
-- Current advertised version: `0.4.2-beta.183` (verified GHCR release, 2026-10-27).
+- Current advertised version: `0.4.2-beta.185` (verified private GHCR release, 2026-10-29).
 - App manifest: [`shwm_content_engine/config.yaml`](shwm_content_engine/config.yaml).
 - Runtime image: `ghcr.io/smarthomewithme/shwm-content-engine:<version>`.
 
