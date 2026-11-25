@@ -1,6 +1,6 @@
 name: SHWM Promotor
 slug: shwm_promotor
-version: '2.0.0-alpha.2.1'
+version: '2.0.0-alpha.3'
 description: Group registry, read-only WordPress selection and manual session console
 url: https://github.com/smarthomewithme/shwm-promotor
 image: ghcr.io/smarthomewithme/shwm-promotor
@@ -14,4 +14,5 @@ panel_icon: mdi:bullhorn-outline
 panel_admin: true
 init: false
 options: {}
-schema: {}
+schema:
+  editorial_token: password?

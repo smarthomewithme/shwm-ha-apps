@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.3 — MCP & Multilingual Copy
+
+- Per-group multilingual promotion drafts, a manual editor, and localized article links when available and allowed.
+- Editorial review, duplicate protection and revision checks. Approval does not schedule or publish posts.
+- Companion integration for the existing Home Assistant MCP. This amd64 update keeps the existing app and data volume and migrates SQLite to schema 3.
+
 ## 2.0.0-alpha.2.1 — UX Refinement
 
 - Responsive light and dark interface with a compact WordPress article preview.
