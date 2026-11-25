@@ -1,7 +1,7 @@
 name: SHWM Promotor
 slug: shwm_promotor
-version: '2.0.0-alpha.1'
-description: Isolated Facebook group promotion diagnostics and manual session console
+version: '2.0.0-alpha.2'
+description: Group registry, read-only WordPress selection and manual session console
 url: https://github.com/smarthomewithme/shwm-promotor
 image: ghcr.io/smarthomewithme/shwm-promotor
 arch: [amd64]
