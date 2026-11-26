@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.7 — Content & Session Completion
+
+- Optional AI copy generation, local Facebook session diagnostics and publication history.
+- Explicit approval for repeat promotions. Existing data and execution locks are preserved.
+- The generator uses up to 6,500 characters of cleaned article content.
+
 ## 2.0.0-alpha.6 — Scheduling & UX Fix
 
 - Show ten groups per page and hide cancelled promotions by default.
