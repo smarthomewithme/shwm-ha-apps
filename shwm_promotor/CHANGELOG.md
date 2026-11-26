@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-alpha.13 — Assisted Editor & Publisher Recovery
+
+- Add optional assisted preparation of an approved post and photos in Chromium; the owner reviews and clicks Publish. Disabled by default; live editor acceptance and platform authorization remain pending.
+- Preserve the direct publisher contract for future authorized transport. Automatic execution remains blocked.
+- Record manual attempts and owner-reported outcomes in the existing queue and history; add authorized rescheduling of conflicting future slots.
+- Preserve SQLite schema 5, drafts, profile and integrations. Unified Updates verifies the matching Core bundle; restart HA Core manually when prompted.
+
 ## 2.0.0-alpha.12 — Native Photo Bridge Verified Azure Host
 
 - Accept the single Azure Blob hostname confirmed by production attachment diagnostics. Existing download safeguards apply.
