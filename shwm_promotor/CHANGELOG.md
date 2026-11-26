@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0-alpha.12 — Native Photo Bridge Verified Azure Host
+
+- Accept the single Azure Blob hostname confirmed by production attachment diagnostics. Existing download safeguards apply.
+- Update Core through Unified Updates. Restart Home Assistant Core manually when prompted.
+
 ## 2.0.0-alpha.11 — Native Photo Bridge Host Diagnosis
 
 - For an unsupported attachment source, the owner-only diagnostic returns its sanitized hostname. The source stays blocked and the draft stays unchanged.
