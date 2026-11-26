@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-alpha.6 — Scheduling & UX Fix
+
+- Show ten groups per page and hide cancelled promotions by default.
+- Select a confirmed Facebook account and enter a local date and time with daylight-saving disambiguation. Schedule suggestions show group names and validation appears beside the form.
+- Return article excerpts in the MCP chunk field while preserving version and offset checks.
+- In-place amd64 update keeps SQLite schema 4 and existing app data. The worker stays paused and automatic execution remains disabled.
+
 ## 2.0.0-alpha.5 — Scheduling, Moderation & History
 
 - Publication calendar, durable scheduling, approval of the exact scope, and manual outcomes with evidence.
