@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.8 — Deal Hunter Integration
+
+- Prepare promotions from explicitly approved Deal Hunter offers in the existing editor and schedule.
+- Preserve confirmed SKU and price data and the original affiliate link. A missing target market blocks deal targeting.
+- The read-only integration requires a separately deployed Deal Hunter contract. The amd64 update keeps existing data and execution locks.
+
 ## 2.0.0-alpha.7 — Content & Session Completion
 
 - Optional AI copy generation, local Facebook session diagnostics and publication history.
