@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.14 — Chromium Autostart
+
+- Add optional `chromium_autostart: true` to start the existing isolated Chromium profile when Promotor starts. Disabled by default; manual start and stop remain available.
+- Preserve existing profile protection and diagnostics. Startup failure does not stop the HTTP service or trigger automatic retries.
+- Keep publication execution blocked, Assisted Editor independent, SQLite schema 5 and existing data. Unified Updates verifies the matching Core bundle.
+
 ## 2.0.0-alpha.13 — Assisted Editor & Publisher Recovery
 
 - Add optional assisted preparation of an approved post and photos in Chromium; the owner reviews and clicks Publish. Disabled by default; live editor acceptance and platform authorization remain pending.
