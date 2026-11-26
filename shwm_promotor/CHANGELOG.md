@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.9 — Media & Photo Bridge
+
+- Upload and reorder original JPEG, PNG and WebP attachments. Use shared or language-specific photo sets, or import the WordPress featured image.
+- Bind ordered photos to editorial approval, manual authorization and publication history. The worker stays paused and automatic execution remains disabled.
+- Back up the full app volume before the SQLite 4 to 5 migration. Update the existing Core integration for native MCP files.
+
 ## 2.0.0-alpha.8 — Deal Hunter Integration
 
 - Prepare promotions from explicitly approved Deal Hunter offers in the existing editor and schedule.
