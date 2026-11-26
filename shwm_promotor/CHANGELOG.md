@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.10 — Native Photo Bridge & Unified Updates
+
+- Add a dedicated ChatGPT attachment tool with a diagnostic mode that does not modify drafts.
+- Install the matching HA Core integration once. Future supported alpha releases synchronize verified integration files. Restart HA Core manually to load new files.
+- Keep SQLite schema 5, stored drafts, Chromium profile and Deal Hunter configuration. Worker remains paused and execution stays disabled.
+
 ## 2.0.0-alpha.9 — Media & Photo Bridge
 
 - Upload and reorder original JPEG, PNG and WebP attachments. Use shared or language-specific photo sets, or import the WordPress featured image.
