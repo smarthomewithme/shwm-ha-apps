@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.5 — Scheduling, Moderation & History
+
+- Publication calendar, durable scheduling, approval of the exact scope, and manual outcomes with evidence.
+- Promotion list improvements and paginated article reads through the existing Home Assistant MCP integration.
+- In-place amd64 update. SQLite migrates to schema 4. Current groups, drafts, token and Chromium profile retain their existing storage. Worker stays paused and automatic execution remains disabled.
+
 ## 2.0.0-alpha.4 — MCP Authentication Hotfix
 
 - Load the editorial token from Supervisor's restricted options file before the app drops privileges.
