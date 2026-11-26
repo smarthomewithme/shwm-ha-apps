@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0-alpha.11 — Native Photo Bridge Host Diagnosis
+
+- For an unsupported attachment source, the owner-only diagnostic returns its sanitized hostname. The source stays blocked and the draft stays unchanged.
+- Update the Core integration automatically from alpha.10 via Unified Updates. Restart Home Assistant Core manually when prompted.
+
 ## 2.0.0-alpha.10 — Native Photo Bridge & Unified Updates
 
 - Add a dedicated ChatGPT attachment tool with a diagnostic mode that does not modify drafts.
