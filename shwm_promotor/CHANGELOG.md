@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0-alpha.4 — MCP Authentication Hotfix (pending release)
+
+- Load the editorial token from Supervisor's restricted options file before the app drops privileges.
+- Preserve existing Promotor data and execution locks. This entry describes a candidate; the installable version remains alpha.3 until publication is approved.
+
 ## 2.0.0-alpha.3 — MCP & Multilingual Copy
 
 - Per-group multilingual promotion drafts, a manual editor, and localized article links when available and allowed.
