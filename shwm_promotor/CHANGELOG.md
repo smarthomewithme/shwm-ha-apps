@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-alpha.16 — Direct Group Navigation & Editor Workflow
+
+- Open registered groups directly and separate composer opening from preparation of approved content.
+- Allow closing Chromium with empty Messenger boxes while protecting unsaved content and ongoing attempts.
+- Keep existing data, options and profile. Automatic publication remains blocked; live editor acceptance is pending.
+- Unified Updates delivers the matching Core integration; restart Core manually when prompted.
+
 ## 2.0.0-alpha.15 — On-Demand Chromium
 
 - Start or stop the existing Chromium session through owner-authorized MCP.
