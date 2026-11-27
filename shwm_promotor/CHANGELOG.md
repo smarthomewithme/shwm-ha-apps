@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-alpha.17 — Assisted Editor & Chromium Shutdown Fix
+
+- Recognize a unique Lexical composer input and report the specific verification failure.
+- Keep owner-only submission and protect unsaved content and ongoing publication attempts.
+- Improve Chromium shutdown and the diagnostics for requested stops and unexpected disconnections.
+- Unified Updates delivers the matching Core integration. Restart HA Core when prompted.
+
 ## 2.0.0-alpha.16 — Direct Group Navigation & Editor Workflow
 
 - Open registered groups directly and separate composer opening from preparation of approved content.
