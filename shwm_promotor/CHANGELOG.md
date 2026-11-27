@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-alpha.15 — On-Demand Chromium
+
+- Start or stop the existing Chromium session through owner-authorized MCP.
+- Protect open editors and ongoing manual publication attempts from a requested stop.
+- Keep optional autostart, the current profile and all existing data. Automatic publication remains blocked.
+- Update the Core integration through Unified Updates, then restart HA Core when prompted.
+
 ## 2.0.0-alpha.14 — Chromium Autostart
 
 - Add optional `chromium_autostart: true` to start the existing isolated Chromium profile when Promotor starts. Disabled by default; manual start and stop remain available.
