@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-alpha.18 — Composer Detection Fix
+
+- Recognize nested containers of the same composer while rejecting independent composers.
+- Log only structural counts and relationships. Owner-only submission remains in place.
+- Unified Updates supplies the matching Core integration. Restart HA Core when prompted.
+
 ## 2.0.0-alpha.17 — Assisted Editor & Chromium Shutdown Fix
 
 - Recognize a unique Lexical composer input and report the specific verification failure.
