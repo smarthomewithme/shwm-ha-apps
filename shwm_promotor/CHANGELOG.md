@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-alpha.19 — Multi-Tab Campaign & Approval
+
+- Prepare up to four tabs from the existing queue with one profile.
+- Approve prepared posts individually or as a batch. Submit manually in Facebook.
+- Record pending moderation links and archive test campaigns without deleting queue history.
+- Unified Updates supplies the matching Core integration. Restart HA Core when prompted.
+
 ## 2.0.0-alpha.18 — Composer Detection Fix
 
 - Recognize nested containers of the same composer while rejecting independent composers.
