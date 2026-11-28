@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0-alpha.20 — Reliable Multi-Tab preparation
+
+- Prepare up to four tabs with independent progress and retry individual failed cards.
+- Run test campaigns from draft materials without scheduling or authorizing publication.
+- Preview test tabs directly and retain publication safeguards for archived alpha.19 test items.
+- Unified Updates supplies the matching Core integration. Restart HA Core when prompted.
+
 ## 2.0.0-alpha.19 — Multi-Tab Campaign & Approval
 
 - Prepare up to four tabs from the existing queue with one profile.
